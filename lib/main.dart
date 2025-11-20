@@ -1,6 +1,6 @@
+import 'package:cineway/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'core/colors.dart';
-import 'screens/home_screen.dart';
 import 'screens/movies_screen.dart';
 import 'screens/bookings_screen.dart';
 import 'screens/profile_screen.dart';
@@ -25,10 +25,16 @@ class MyApp extends StatelessWidget {
           foregroundColor: Colors.white,
           elevation: 0,
         ),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.dodgerBlue,
+        colorScheme: ColorScheme.dark(
+          primary: AppColors.dodgerBlue,
+          secondary: AppColors.mineShaft,
+          surface: AppColors.nileBlue,
+          error: Colors.red,
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onSurface: AppColors.textSecondary,
+          onError: Colors.white,
           brightness: Brightness.dark,
-          background: AppColors.mirage,
         ),
       ),
       home: const MainNavigator(),
@@ -47,7 +53,7 @@ class _MainNavigatorState extends State<MainNavigator> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    const HomeScreen(),
+    const LoginScreen(),
     const MoviesScreen(),
     const BookingsScreen(),
     const ProfileScreen(),
@@ -61,13 +67,14 @@ class _MainNavigatorState extends State<MainNavigator> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.mirage,
-        selectedItemColor: AppColors.dodgerBlue,
-        unselectedItemColor: AppColors.jumbo,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        selectedItemColor: colorScheme.primary,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [

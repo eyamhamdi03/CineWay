@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/colors.dart';
 
 class CustomSearchBar extends StatelessWidget {
   final String placeholder;
@@ -17,20 +16,28 @@ class CustomSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.mineShaft,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         onTap: onTap,
-        style: const TextStyle(color: Colors.white, fontSize: 16),
+        style: TextStyle(color: colorScheme.onSurface, fontSize: 16),
         decoration: InputDecoration(
           hintText: placeholder,
-          hintStyle: TextStyle(color: AppColors.jumbo, fontSize: 16),
-          prefixIcon: const Icon(Icons.search, color: AppColors.jumbo),
+          hintStyle: TextStyle(
+            color: colorScheme.onSurface.withOpacity(0.5),
+            fontSize: 16,
+          ),
+          prefixIcon: Icon(
+            Icons.search,
+            color: colorScheme.onSurface.withOpacity(0.5),
+          ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,

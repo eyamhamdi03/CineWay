@@ -1,0 +1,56 @@
+import '../models/movie.dart';
+import '../models/cast.dart';
+import '../models/review.dart';
+
+final List<Movie> mockMovies = [
+  Movie(
+    id: 1,
+    title: "Dune: Part Two",
+    description:
+    "Paul Atreides unites with Chani and the Fremen as he seeks revenge "
+        "against the conspirators who destroyed his family.",
+    bannerUrl: "assets/dune_banner.png",
+    categories: ["Action", "Sci-Fi", "Adventure"],
+    duration: "2h 46m",
+    releaseYear: 2024,
+    rating: 4.8,
+    cast: [
+      Cast(name: "Timothée Chalamet", imageUrl: "assets/timo.png"),
+      Cast(name: "Zendaya", imageUrl: "assets/zen.png"),
+      Cast(name: "Rebecca Ferguson", imageUrl: "assets/rebecca.png"),
+      Cast(name: "Austin Butler", imageUrl: "assets/austin.png"),
+    ],
+    reviews: [
+      Review(
+        reviewerName: "Alex Morgan",
+        reviewerAvatar: "user1.png",
+        rating: 5,
+        comment:
+        "An absolute masterpiece! The cinematography was breathtaking.",
+        timeAgo: "2 weeks ago",
+        likes: 125,
+        comments: 3,
+      ),
+      Review(
+        reviewerName: "Casey Lee",
+        reviewerAvatar: "user2.png",
+        rating: 4,
+        comment:
+        "Really great movie, although some parts felt a bit slow.",
+        timeAgo: "1 month ago",
+        likes: 98,
+        comments: 12,
+      ),
+      Review(
+        reviewerName: "Jordan Taylor",
+        reviewerAvatar: "user3.png",
+        rating: 3,
+        comment:
+        "It was okay. Good effects but predictable plot.",
+        timeAgo: "3 months ago",
+        likes: 24,
+        comments: 31,
+      ),
+    ],
+  ),
+];

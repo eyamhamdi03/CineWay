@@ -1,4 +1,7 @@
+import 'package:cineway/screens/details_screen.dart';
+import 'package:cineway/screens/home_screen.dart';
 import 'package:cineway/screens/login_screen.dart';
+import 'package:cineway/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'core/colors.dart';
 import 'screens/movies_screen.dart';
@@ -53,8 +56,10 @@ class _MainNavigatorState extends State<MainNavigator> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    const LoginScreen(),
-    const MoviesScreen(),
+    //const LoginScreen(),
+    const HomeScreen(),
+    const SearchScreen(),
+    const MovieDetailsScreen(),
     const BookingsScreen(),
     const ProfileScreen(),
   ];
@@ -79,7 +84,9 @@ class _MainNavigatorState extends State<MainNavigator> {
         onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.movie), label: 'Movies'),
+          BottomNavigationBarItem(icon: Icon(Icons.movie), label: 'Search'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Details'),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.bookmark),
             label: 'Bookings',

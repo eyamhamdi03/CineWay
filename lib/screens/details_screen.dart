@@ -173,19 +173,19 @@ class MovieDetailsScreen extends StatelessWidget {
                   // Buy Tickets Button
                   SizedBox(
                     width: double.infinity,
-                    height: 55,
+                    height: 46,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.cerulean,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                       onPressed: () {},
                       child: const Text(
                         "Buy Tickets",
                         style: TextStyle(
-                          color: Colors.black,
+                          color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),

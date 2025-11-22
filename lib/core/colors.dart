@@ -9,6 +9,8 @@ class AppColors {
   static const Color mirage = Color(0xFF101922);
   static const Color mineShaft = Color(0xFF292929);
   static const Color nileBlue = Color(0xFF18334C);
+  static const Color nileBlue2 = Color(0xFF090420);
+
 
   // Neutral / Gray
   static const Color jumbo = Color(0xFF7D7D81);

@@ -17,11 +17,12 @@ final List<Movie> mockMovies = [
     cast: [
       Cast(name: "Timothée Chalamet", imageUrl: "assets/timo.png"),
       Cast(name: "Zendaya", imageUrl: "assets/zen.png"),
-      Cast(name: "Rebecca Ferguson", imageUrl: "assets/rebecca.png"),
+      Cast(name: "Rebecca Ferguson", imageUrl: "assets/rebecca.jpg"),
       Cast(name: "Austin Butler", imageUrl: "assets/austin.png"),
     ],
     reviews: [
       Review(
+        reviewId: 1,
         reviewerName: "Alex Morgan",
         reviewerAvatar: "user1.png",
         rating: 5,
@@ -29,9 +30,10 @@ final List<Movie> mockMovies = [
         "An absolute masterpiece! The cinematography was breathtaking.",
         timeAgo: "2 weeks ago",
         likes: 125,
-        comments: 3,
+        dislikes: 3,
       ),
       Review(
+        reviewId: 2,
         reviewerName: "Casey Lee",
         reviewerAvatar: "user2.png",
         rating: 4,
@@ -39,9 +41,10 @@ final List<Movie> mockMovies = [
         "Really great movie, although some parts felt a bit slow.",
         timeAgo: "1 month ago",
         likes: 98,
-        comments: 12,
+        dislikes: 12,
       ),
       Review(
+        reviewId: 3,
         reviewerName: "Jordan Taylor",
         reviewerAvatar: "user3.png",
         rating: 3,
@@ -49,8 +52,41 @@ final List<Movie> mockMovies = [
         "It was okay. Good effects but predictable plot.",
         timeAgo: "3 months ago",
         likes: 24,
-        comments: 31,
+        dislikes: 31,
       ),
+      Review(
+        reviewId: 4,
+        reviewerName: "Jordan Taylor",
+        reviewerAvatar: "user3.png",
+        rating: 3,
+        comment:
+        "It was okay. Good effects but predictable plot.",
+        timeAgo: "3 months ago",
+        likes: 24,
+        dislikes: 31,
+      ),Review(
+        reviewId: 5,
+        reviewerName: "Jordan Taylor",
+        reviewerAvatar: "user3.png",
+        rating: 3,
+        comment:
+        "It was okay. Good effects but predictable plot.",
+        timeAgo: "3 months ago",
+        likes: 24,
+        dislikes: 31,
+      ),Review(
+        reviewId: 6,
+        reviewerName: "Jordan Taylor",
+        reviewerAvatar: "user3.png",
+        rating: 3,
+        comment:
+        "It was okay. Good effects but predictable plot.",
+        timeAgo: "3 months ago",
+        likes: 24,
+        dislikes: 31,
+      ),
+
+
     ],
   ),
 ];

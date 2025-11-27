@@ -5,7 +5,7 @@ import 'package:cineway/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'core/colors.dart';
 import 'screens/movies_screen.dart';
-import 'screens/get_started_screen.dart';
+import 'screens/profile_setup_screen.dart';
 import 'screens/bookings_screen.dart';
 import 'screens/profile_screen.dart';
 
@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
       ),
-  home: const GetStartedScreen(),
+  home: const ProfileSetupScreen(),
     );
   }
 }

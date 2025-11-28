@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../core/colors.dart';
+import 'signup_screen.dart';
 import 'home_screen.dart';
-import 'profile_setup_screen.dart';
 import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -215,10 +215,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: const TextStyle(color: AppColors.dodgerBlue, fontWeight: FontWeight.w700),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (_) => const ProfileSetupScreen()),
-                                  );
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const SignupScreen()),
+                                    );
                                 },
                             ),
                           ],

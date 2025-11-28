@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/colors.dart';
-import '../data/mock_movies.dart';
+import '../services/app_state.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
@@ -11,33 +12,6 @@ class BookingsScreen extends StatefulWidget {
 
 class _BookingsScreenState extends State<BookingsScreen> {
   int _tabIndex = 0; // 0 upcoming, 1 history
-
-  final List<Map<String, dynamic>> _upcoming = [
-    {
-      'movie': mockMovies[0],
-      'rating': 'PG-13',
-      'time': 'Today, 7:30 PM',
-      'cinema': 'CineWay Grand Hall',
-      'seats': 'G7, G8'
-    },
-    {
-      'movie': mockMovies.length > 0 ? mockMovies[0] : null,
-      'rating': 'PG-13',
-      'time': 'Tomorrow, 5:00 PM',
-      'cinema': 'CineWay Plex',
-      'seats': 'D12'
-    }
-  ];
-
-  final List<Map<String, dynamic>> _history = [
-    {
-      'movie': mockMovies.length > 0 ? mockMovies[0] : null,
-      'rating': 'PG-13',
-      'time': 'Aug 01, 8:00 PM',
-      'cinema': 'CineWay Downtown',
-      'seats': 'B4, B5'
-    }
-  ];
 
   Widget _buildTabHeader() {
     return Row(
@@ -69,7 +43,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
   }
 
   Widget _bookingCard(Map<String, dynamic> b) {
-    final movie = b['movie'];
+    final movieTitle = b['movieTitle'] ?? (b['movie'] != null ? b['movie'].title : 'Unknown');
+    final time = b['time'] ?? b['dateTime'] ?? '';
+    final cinema = b['cinema'] ?? '';
+    final seats = b['seats'] ?? '';
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       padding: const EdgeInsets.all(14),
@@ -80,9 +57,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
             width: 72,
             height: 110,
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: const Color(0xFF101420)),
-            child: ClipRRect(
+              child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: movie != null && movie.bannerUrl.isNotEmpty ? Image.asset(movie.bannerUrl, fit: BoxFit.cover) : const Icon(Icons.movie, size: 48, color: AppColors.jumbo),
+              child: const Center(child: Icon(Icons.movie, size: 48, color: AppColors.jumbo)),
             ),
           ),
           const SizedBox(width: 12),
@@ -90,15 +67,13 @@ class _BookingsScreenState extends State<BookingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(movie != null ? movie.title : 'Unknown', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 6),
-                Text(b['rating'], style: const TextStyle(color: AppColors.jumbo)),
-                const SizedBox(height: 6),
-                Text(b['time'], style: const TextStyle(color: AppColors.jumbo)),
-                const SizedBox(height: 6),
-                Text(b['cinema'], style: const TextStyle(color: AppColors.jumbo)),
-                const SizedBox(height: 6),
-                Text('Seats: ${b['seats']}', style: const TextStyle(color: AppColors.jumbo)),
+                  Text(movieTitle, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 6),
+                  Text(time, style: const TextStyle(color: AppColors.jumbo)),
+                  const SizedBox(height: 6),
+                  Text(cinema, style: const TextStyle(color: AppColors.jumbo)),
+                  const SizedBox(height: 6),
+                  Text('Seats: $seats', style: const TextStyle(color: AppColors.jumbo)),
               ],
             ),
           ),
@@ -107,7 +82,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(color: AppColors.dodgerBlue.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
-            child: IconButton(
+              child: IconButton(
               icon: const Icon(Icons.qr_code, color: AppColors.dodgerBlue),
               onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Show QR (demo)'))),
             ),
@@ -119,7 +94,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final data = _tabIndex == 0 ? _upcoming : _history;
+  final appState = Provider.of<AppState>(context);
+  final upcoming = appState.bookings.map((b) => b.toJson()).toList();
+  final history = <Map<String, dynamic>>[];
+  final data = _tabIndex == 0 ? upcoming : history;
     return Scaffold(
       backgroundColor: AppColors.mirage,
       appBar: AppBar(

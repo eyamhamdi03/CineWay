@@ -124,7 +124,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               ),
                               title: Text(m.title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                               subtitle: Text(m.duration, style: TextStyle(color: AppColors.jumbo)),
-                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MovieDetailsScreen())),
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MovieDetailsScreen(movie: m))),
                             );
                           },
                         )

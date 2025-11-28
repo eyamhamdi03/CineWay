@@ -1,16 +1,30 @@
-import 'package:cineway/screens/details_screen.dart';
+// details screen no longer part of bottom nav
 import 'package:cineway/screens/home_screen.dart';
 import 'package:cineway/screens/login_screen.dart';
 import 'package:cineway/screens/search_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'core/colors.dart';
 import 'screens/movies_screen.dart';
 import 'screens/profile_setup_screen.dart';
 import 'screens/bookings_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/get_started_screen.dart';
+import 'screens/booking_confirmation_screen.dart';
+import 'services/app_state.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) {
+        final s = AppState();
+        s.load();
+        return s;
+      },
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -18,10 +32,30 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'CineWay',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
+    return Consumer<AppState>(builder: (context, appState, _) {
+      final isDark = appState.isDark;
+      final lightTheme = ThemeData(
+        brightness: Brightness.light,
+        primaryColor: AppColors.dodgerBlue,
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+        ),
+        colorScheme: ColorScheme.light(
+          primary: AppColors.dodgerBlue,
+          secondary: AppColors.mineShaft,
+          surface: Colors.white,
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onSurface: Colors.black87,
+          brightness: Brightness.light,
+        ),
+      );
+
+      final darkTheme = ThemeData(
+        brightness: Brightness.dark,
         primaryColor: AppColors.dodgerBlue,
         scaffoldBackgroundColor: AppColors.mirage,
         appBarTheme: const AppBarTheme(
@@ -33,16 +67,30 @@ class MyApp extends StatelessWidget {
           primary: AppColors.dodgerBlue,
           secondary: AppColors.mineShaft,
           surface: AppColors.nileBlue,
-          error: Colors.red,
           onPrimary: Colors.white,
           onSecondary: Colors.white,
           onSurface: AppColors.textSecondary,
-          onError: Colors.white,
           brightness: Brightness.dark,
         ),
-      ),
-  home: const ProfileSetupScreen(),
-    );
+      );
+
+      return MaterialApp(
+        title: 'CineWay',
+        debugShowCheckedModeBanner: false,
+        theme: lightTheme,
+        darkTheme: darkTheme,
+        themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+        initialRoute: '/get_started',
+        routes: {
+          '/get_started': (ctx) => const GetStartedScreen(),
+          '/login': (ctx) => const LoginScreen(),
+          '/profile_setup': (ctx) => const ProfileSetupScreen(),
+          '/home': (ctx) => const MainNavigator(),
+          '/bookings': (ctx) => const BookingsScreen(),
+          '/booking_confirmation': (ctx) => const BookingConfirmationScreen(),
+        },
+      );
+    });
   }
 }
 
@@ -57,10 +105,9 @@ class _MainNavigatorState extends State<MainNavigator> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    //const LoginScreen(),
     const HomeScreen(),
+    const MoviesScreen(),
     const SearchScreen(),
-    const MovieDetailsScreen(),
     const BookingsScreen(),
     const ProfileScreen(),
   ];
@@ -85,13 +132,9 @@ class _MainNavigatorState extends State<MainNavigator> {
         onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.movie), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Details'),
-
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark),
-            label: 'Bookings',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.movie), label: 'Movies'),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Bookings'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/colors.dart';
+import '../services/app_state.dart';
+import 'booking_confirmation_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key});
+  final List<String>? seats;
+  final double? amount;
+  final String? movieTitle;
+  final String? cinema;
+  final String? dateTime;
+
+  const PaymentScreen({super.key, this.seats, this.amount, this.movieTitle, this.cinema, this.dateTime});
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -18,7 +27,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   int _selectedMethod = 0; // 0 = card, 1 = wallet
   bool _saveCard = true;
 
-  final double _amount = 25.50;
+  late double _amount;
 
   @override
   void dispose() {
@@ -29,6 +38,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _amount = widget.amount ?? 25.50;
+  }
+
   void _selectMethod(int index) => setState(() => _selectedMethod = index);
 
   void _pay() {
@@ -36,9 +51,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
       // If card selected, require form valid
       if (!_formKey.currentState!.validate()) return;
     }
+    // Demo success: create booking and navigate to confirmation
+    final bookingId = 'CW-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+    final seats = widget.seats ?? ['A1'];
+    final booking = Booking(id: bookingId, movieTitle: widget.movieTitle ?? 'Movie', dateTime: widget.dateTime ?? 'Today • 7:30 PM', cinema: widget.cinema ?? 'CineWay', seats: seats.join(', '));
 
-    // Demo success
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment successful (demo)')));
+    // add to AppState
+    Provider.of<AppState>(context, listen: false).addBooking(booking);
+
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment successful')));
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => BookingConfirmationScreen(booking: booking)),
+    );
   }
 
   Widget _methodTile({required IconData icon, required String title, required String subtitle, required int index}) {

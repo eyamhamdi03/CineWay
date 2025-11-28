@@ -2,6 +2,7 @@ import 'package:cineway/core/colors.dart';
 import 'package:cineway/data/mock_movies.dart';
 import 'package:cineway/models/movie.dart';
 import 'package:cineway/screens/reviews_screen.dart';
+import 'package:cineway/screens/showtimes_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/common/cast_item.dart';
@@ -10,11 +11,13 @@ import '../widgets/common/info_box.dart';
 import '../widgets/common/tab_item.dart';
 
 class MovieDetailsScreen extends StatelessWidget {
-  const MovieDetailsScreen({super.key});
+  final Movie? movie;
+
+  const MovieDetailsScreen({super.key, this.movie});
 
   @override
   Widget build(BuildContext context) {
-    final Movie movie = mockMovies[0];
+  final Movie m = movie ?? mockMovies[0];
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -49,7 +52,7 @@ class MovieDetailsScreen extends StatelessWidget {
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Image.asset(
-                movie.bannerUrl,
+                m.bannerUrl,
                 fit: BoxFit.cover,
               ),
             ),
@@ -65,7 +68,7 @@ class MovieDetailsScreen extends StatelessWidget {
 
                   // Movie Title
                   Text(
-                    movie.title,
+                    m.title,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
@@ -77,7 +80,7 @@ class MovieDetailsScreen extends StatelessWidget {
                   // Categories
                   Wrap(
                     spacing: 8,
-                    children: movie.categories
+                    children: m.categories
                         .map((cat) => ChipUI(cat))
                         .toList(),
                   ),
@@ -87,8 +90,8 @@ class MovieDetailsScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      InfoBox(icon: Icons.calendar_month, label: movie.releaseYear.toString()),
-                      InfoBox(icon: Icons.timer, label: movie.duration),
+                      InfoBox(icon: Icons.calendar_month, label: m.releaseYear.toString()),
+                      InfoBox(icon: Icons.timer, label: m.duration),
                       const InfoBox(icon: Icons.shield, label: "PG-13"),
                     ],
                   ),
@@ -114,13 +117,15 @@ class MovieDetailsScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ReviewsScreen(movie: movie),
+                                builder: (_) => ReviewsScreen(movie: m),
                               ),
                             );
                           },
                         ),
 
-                        TabItem(label: "Showtimes", active: false, onTap: () {}),
+                        TabItem(label: "Showtimes", active: false, onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => ShowtimesScreen(movieTitle: m.title)));
+                        }),
                       ],
                     ),
                   ),
@@ -139,7 +144,7 @@ class MovieDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   Text(
-                    movie.description, // ← dynamic
+                    m.description, // ← dynamic
                     style: const TextStyle(color: Colors.white70, height: 1.4),
                   ),
 
@@ -162,7 +167,7 @@ class MovieDetailsScreen extends StatelessWidget {
                     height: 110,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
-                      children: movie.cast
+                      children: m.cast
                           .map((actor) => CastItem(actor.name, actor.imageUrl))
                           .toList(),
                     ),
@@ -181,7 +186,9 @@ class MovieDetailsScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => ShowtimesScreen(movieTitle: m.title)));
+                      },
                       child: const Text(
                         "Buy Tickets",
                         style: TextStyle(

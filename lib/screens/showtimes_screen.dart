@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../core/colors.dart';
+import 'select_seats_screen.dart';
 
 class ShowtimesScreen extends StatefulWidget {
-  const ShowtimesScreen({super.key});
+  final String? movieTitle;
+
+  const ShowtimesScreen({super.key, this.movieTitle});
 
   @override
   State<ShowtimesScreen> createState() => _ShowtimesScreenState();
@@ -49,12 +52,11 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a showtime')));
       return;
     }
-    // demo: show selection
-    final selections = _selectedTimes.entries.map((e) => '${_cinemas[e.key]['name']}: ${e.value}').join('\n');
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(title: const Text('Selected'), content: Text(selections), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))]),
-    );
+    // navigate to seat selection for the first selected showtime
+    final firstEntry = _selectedTimes.entries.first;
+    final cinema = _cinemas[firstEntry.key]['name'] as String;
+    final time = firstEntry.value as String;
+    Navigator.push(context, MaterialPageRoute(builder: (_) => SelectSeatsScreen(movieTitle: widget.movieTitle, cinema: cinema, dateTime: time)));
   }
 
   Widget _buildHeaderCard() {
@@ -70,10 +72,10 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text('Planet of the Apes', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
-                SizedBox(height: 6),
-                Text('2h 25m | PG-13 | Action, Sci-Fi', style: TextStyle(color: AppColors.jumbo)),
+              children: [
+                Text(widget.movieTitle ?? 'Movie', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 6),
+                const Text('2h 25m | PG-13 | Action, Sci-Fi', style: TextStyle(color: AppColors.jumbo)),
               ],
             ),
           ),

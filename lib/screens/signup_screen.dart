@@ -2,6 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../core/colors.dart';
 import 'profile_setup_screen.dart';
+import 'package:provider/provider.dart';
+import '../services/app_state.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -42,15 +44,16 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 900));
+    // Call AppState signUp (mock) and navigate to profile setup on success
+    final appState = Provider.of<AppState>(context, listen: false);
+    final success = await appState.signUp(_emailController.text.trim(), _passwordController.text);
     setState(() => _loading = false);
 
-    // After signup, navigate to profile setup to collect additional info.
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const ProfileSetupScreen()),
-      );
+    if (!mounted) return;
+    if (success) {
+      Navigator.pushReplacementNamed(context, '/profile_setup');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign up failed')));
     }
   }
 

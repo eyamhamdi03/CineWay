@@ -2,8 +2,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../core/colors.dart';
 import 'signup_screen.dart';
-import 'home_screen.dart';
 import 'forgot_password_screen.dart';
+import 'package:provider/provider.dart';
+import '../services/app_state.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,14 +40,16 @@ class _LoginScreenState extends State<LoginScreen> {
     // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 700));
 
+    // Call AppState signIn (mock)
+    final appState = Provider.of<AppState>(context, listen: false);
+    final success = await appState.signIn(_emailController.text.trim(), _passwordController.text);
     setState(() => _loading = false);
 
-    // In this demo, any valid form takes user to HomeScreen
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+    if (!mounted) return;
+    if (success) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign in failed')));
     }
   }
 

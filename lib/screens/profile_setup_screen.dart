@@ -1,9 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../core/colors.dart';
+import 'package:provider/provider.dart';
+import '../services/app_state.dart';
+import '../services/i18n.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({super.key});
+  final dynamic user; // optional UserProfile for editing
+  const ProfileSetupScreen({super.key, this.user});
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -28,6 +32,22 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   bool _newsletter = true;
   bool _pushNotifications = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // if user passed, prefill controllers
+    if (widget.user != null) {
+      try {
+        final u = widget.user;
+        _nameController.text = u.fullName ?? '';
+        _emailController.text = u.email ?? '';
+        if (u.dob != null && u.dob is DateTime) _dob = u.dob as DateTime;
+        if (u.favoriteGenres is List) _selectedGenres.addAll(List<String>.from(u.favoriteGenres));
+        if (u.receiveNewsletter != null) _newsletter = u.receiveNewsletter as bool;
+      } catch (_) {}
+    }
+  }
 
   // simple email validation
   String? _validateEmail(String? v) {
@@ -89,21 +109,25 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   void _completeProfile() {
     if (!_formKey.currentState!.validate()) return;
 
-    // For now, just show a summary snackbar
-    final name = _nameController.text.trim();
-    final email = _emailController.text.trim();
+  // For now, just show a summary snackbar
+  final name = _nameController.text.trim();
 
-    final msg = StringBuffer();
-    msg.writeln('Name: $name');
-    msg.writeln('Email: $email');
-    msg.writeln('DOB: ${_formatDob()}');
-    msg.writeln('Genres: ${_selectedGenres.join(', ')}');
-    msg.writeln('Newsletter: ${_newsletter ? 'Yes' : 'No'}');
-    msg.writeln('Push: ${_pushNotifications ? 'Yes' : 'No'}');
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg.toString()), duration: const Duration(seconds: 3)),
+    // Save profile into AppState
+    final appState = Provider.of<AppState>(context, listen: false);
+    appState.completeProfile(
+      fullName: name,
+      dob: _dob,
+      avatarPath: null,
+      favoriteGenres: _selectedGenres.toList(),
+      newsletter: _newsletter,
     );
+
+    // If we opened this screen to edit an existing profile, pop back; otherwise go home
+    if (widget.user != null) {
+      Navigator.maybePop(context);
+    } else {
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    }
   }
 
   @override
@@ -124,7 +148,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.maybePop(context),
         ),
-        title: const Text('Create Your Profile', style: TextStyle(fontWeight: FontWeight.w700)),
+  title: Text(I18n.t(context, 'create_profile'), style: const TextStyle(fontWeight: FontWeight.w700)),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -139,10 +163,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               ),
 
               const SizedBox(height: 8),
-              const Center(
+              Center(
                 child: Text(
                   "Let's get your account personalized.",
-                  style: TextStyle(color: AppColors.jumbo, fontSize: 16),
+                  style: const TextStyle(color: AppColors.jumbo, fontSize: 16),
                 ),
               ),
 
@@ -318,14 +342,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _completeProfile,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.dodgerBlue,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          onPressed: _completeProfile,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.dodgerBlue,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(I18n.t(context, 'complete_profile'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                         ),
-                        child: const Text('Complete Profile', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                      ),
                     ),
 
                     const SizedBox(height: 12),

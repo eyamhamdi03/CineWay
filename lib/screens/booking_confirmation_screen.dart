@@ -3,21 +3,24 @@ import '../core/colors.dart';
 import '../data/mock_movies.dart';
 
 class BookingConfirmationScreen extends StatelessWidget {
-  final Map<String, dynamic>? booking;
+  final dynamic booking; // can be AppState.Booking or a Map
 
   const BookingConfirmationScreen({super.key, this.booking});
 
   String _generateBookingId() {
-    return 'CW-842751'; // demo static id (could be generated)
+    return 'CW-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
   }
 
   @override
   Widget build(BuildContext context) {
-    final movie = booking != null && booking!['movie'] != null ? booking!['movie'] : mockMovies[0];
-    final dateTime = booking != null && booking!['dateTime'] != null ? booking!['dateTime'] : 'Sunday, 27 October • 7:30 PM';
-    final cinema = booking != null && booking!['cinema'] != null ? booking!['cinema'] : 'CineWay Plex, Downtown • Screen 8';
-    final seats = booking != null && booking!['seats'] != null ? booking!['seats'] : 'F7, F8 (2 Tickets)';
-    final bookingId = booking != null && booking!['id'] != null ? booking!['id'] : _generateBookingId();
+    final hasBooking = booking != null;
+    final movieTitle = hasBooking
+        ? (booking is Map ? (booking['movieTitle'] ?? '') : (booking.movieTitle ?? ''))
+        : (mockMovies.isNotEmpty ? mockMovies[0].title : 'Movie');
+    final dateTime = hasBooking ? (booking is Map ? (booking['dateTime'] ?? '') : booking.dateTime) : 'Sunday, 27 October • 7:30 PM';
+    final cinema = hasBooking ? (booking is Map ? (booking['cinema'] ?? '') : booking.cinema) : 'CineWay Plex, Downtown • Screen 8';
+    final seats = hasBooking ? (booking is Map ? (booking['seats'] ?? '') : booking.seats) : 'F7, F8 (2 Tickets)';
+    final bookingId = hasBooking ? (booking is Map ? (booking['id'] ?? _generateBookingId()) : booking.id) : _generateBookingId();
 
     return Scaffold(
       backgroundColor: AppColors.mirage,
@@ -44,7 +47,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                     const Text('Scan the QR code below for entry.', style: TextStyle(color: AppColors.jumbo)),
                     const SizedBox(height: 16),
 
-                    // QR placeholder box
+                    // QR / booking id box (placeholder)
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
@@ -52,7 +55,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                         width: double.infinity,
                         height: 220,
                         color: const Color(0xFF2E484E),
-                        child: const Center(child: Icon(Icons.qr_code, size: 120, color: Colors.white)),
+                        child: Center(child: Text(bookingId, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700))),
                       ),
                     ),
 
@@ -63,7 +66,7 @@ class BookingConfirmationScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 18),
-              // Movie row
+              // Movie row (title + meta)
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: const Color(0xFF141A20), borderRadius: BorderRadius.circular(12)),
@@ -73,17 +76,14 @@ class BookingConfirmationScreen extends StatelessWidget {
                       width: 58,
                       height: 58,
                       decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: const Color(0xFF101420)),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: movie.bannerUrl.isNotEmpty ? Image.asset(movie.bannerUrl, fit: BoxFit.cover) : const Icon(Icons.movie, color: AppColors.jumbo),
-                      ),
+                      child: const Center(child: Icon(Icons.movie, color: AppColors.jumbo)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(movie.title, style: const TextStyle(color: AppColors.dodgerBlue, fontSize: 16, fontWeight: FontWeight.w800)),
+                        Text(movieTitle, style: const TextStyle(color: AppColors.dodgerBlue, fontSize: 16, fontWeight: FontWeight.w800)),
                         const SizedBox(height: 6),
-                        Text('${movie.duration} • ${movie.categories.isNotEmpty ? movie.categories.join(", ") : ""} • PG-13', style: const TextStyle(color: AppColors.jumbo)),
+                        Text('• • •', style: const TextStyle(color: AppColors.jumbo)),
                       ]),
                     ),
                   ],
@@ -142,6 +142,38 @@ class BookingConfirmationScreen extends StatelessWidget {
                   label: const Text('View Receipt', style: TextStyle(color: AppColors.dodgerBlue, fontWeight: FontWeight.w700)),
                   style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFF2A3942)), backgroundColor: const Color(0xFF141A20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          // go to bookings
+                          Navigator.pushNamed(context, '/bookings');
+                        },
+                        style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFF2A3942)), backgroundColor: const Color(0xFF141A20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                        child: const Text('View My Bookings', style: TextStyle(color: AppColors.jumbo, fontWeight: FontWeight.w700)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // go to home
+                          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                        },
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.dodgerBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                        child: const Text('Back to Home', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

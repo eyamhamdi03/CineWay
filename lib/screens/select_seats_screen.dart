@@ -4,7 +4,11 @@ import '../data/mock_movies.dart';
 import 'payment_screen.dart';
 
 class SelectSeatsScreen extends StatefulWidget {
-  const SelectSeatsScreen({super.key});
+  final String? movieTitle;
+  final String? cinema;
+  final String? dateTime;
+
+  const SelectSeatsScreen({super.key, this.movieTitle, this.cinema, this.dateTime});
 
   @override
   State<SelectSeatsScreen> createState() => _SelectSeatsScreenState();
@@ -58,9 +62,14 @@ class _SelectSeatsScreenState extends State<SelectSeatsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select at least one seat')));
       return;
     }
+    final seats = _sortedSelected();
+    final movieTitle = widget.movieTitle ?? (mockMovies.isNotEmpty ? mockMovies[0].title : 'Movie');
+    final totalAmount = (_selected.length * _seatPrice);
+    final cinema = widget.cinema ?? 'CineWay Plex';
+    final dateTime = widget.dateTime ?? 'Today • 7:30 PM';
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const PaymentScreen()),
+      MaterialPageRoute(builder: (_) => PaymentScreen(seats: seats, amount: totalAmount, movieTitle: movieTitle, cinema: cinema, dateTime: dateTime)),
     );
   }
 
@@ -84,7 +93,7 @@ class _SelectSeatsScreenState extends State<SelectSeatsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final movieTitle = mockMovies.isNotEmpty ? mockMovies[0].title : 'Movie';
+  final movieTitle = widget.movieTitle ?? (mockMovies.isNotEmpty ? mockMovies[0].title : 'Movie');
     final selectedList = _sortedSelected();
     final total = (_selected.length * _seatPrice);
 

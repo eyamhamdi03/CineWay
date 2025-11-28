@@ -1,7 +1,19 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+}
+
+// Ensure Kotlin compile JVM target is consistent across subprojects (fixes plugin/Gradle JVM mismatch)
+subprojects {
+    tasks.withType<KotlinCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
     }
 }
 

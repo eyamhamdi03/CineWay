@@ -62,10 +62,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textColor = colorScheme.onSurface;
+
     return Scaffold(
-      backgroundColor: AppColors.mirage,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.mirage,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -86,21 +89,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: AppColors.dodgerBlue,
+                      color: colorScheme.primary,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Center(child: Icon(Icons.movie, color: Colors.white)),
+                    child: Center(child: Icon(Icons.movie, color: colorScheme.onPrimary)),
                   ),
                   const SizedBox(width: 12),
-                  const Text('CineWay', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700)),
+                  Text('CineWay', style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w700)),
                 ],
               ),
 
               const SizedBox(height: 28),
 
-              const Text('Welcome back', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800)),
+              Text('Welcome back', style: TextStyle(color: textColor, fontSize: 28, fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
-              const Text('Sign in to continue to your movies and bookings.', style: TextStyle(color: AppColors.jumbo)),
+              Text('Sign in to continue to your movies and bookings.', style: TextStyle(color: textColor.withOpacity(0.7))),
 
               const SizedBox(height: 22),
 
@@ -109,17 +112,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('Email', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    Text('Email', style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _emailController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: textColor),
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         hintText: 'you@company.com',
-                        hintStyle: const TextStyle(color: AppColors.mirageLight),
+                        hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
                         filled: true,
-                        fillColor: const Color(0xFF101820),
+                        fillColor: Theme.of(context).inputDecorationTheme.fillColor,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                       ),
@@ -127,21 +130,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
 
                     const SizedBox(height: 14),
-                    const Text('Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    Text('Password', style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _passwordController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: textColor),
                       obscureText: _obscure,
                       decoration: InputDecoration(
                         hintText: '••••••••',
-                        hintStyle: const TextStyle(color: AppColors.mirageLight),
+                        hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
                         filled: true,
-                        fillColor: const Color(0xFF101820),
+                        fillColor: Theme.of(context).inputDecorationTheme.fillColor,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: AppColors.mirageLight),
+                          icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: textColor.withOpacity(0.6)),
                           onPressed: () => setState(() => _obscure = !_obscure),
                         ),
                       ),
@@ -155,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Row(
                           children: [
                             Checkbox(value: false, onChanged: (_) {}),
-                            const Text('Remember me', style: TextStyle(color: AppColors.jumbo)),
+                            Text('Remember me', style: TextStyle(color: textColor.withOpacity(0.7))),
                           ],
                         ),
                         TextButton(
@@ -165,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
                             );
                           },
-                          child: const Text('Forgot?', style: TextStyle(color: AppColors.dodgerBlue, fontWeight: FontWeight.w600)),
+                          child: Text('Forgot?', style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w600)),
                         ),
                       ],
                     ),
@@ -179,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           backgroundColor: AppColors.dodgerBlue,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: _loading ? const CircularProgressIndicator(color: Colors.white) : const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        child: _loading ? CircularProgressIndicator(color: colorScheme.onPrimary) : Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                       ),
                     ),
 
@@ -211,11 +214,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: RichText(
                         text: TextSpan(
                           text: "Don't have an account? ",
-                          style: const TextStyle(color: AppColors.jumbo),
+                            style: TextStyle(color: textColor.withOpacity(0.7)),
                           children: [
-                            TextSpan(
-                              text: 'Create',
-                              style: const TextStyle(color: AppColors.dodgerBlue, fontWeight: FontWeight.w700),
+                              TextSpan(
+                                text: 'Create',
+                                style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w700),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () {
                                     Navigator.push(

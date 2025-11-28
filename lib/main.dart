@@ -48,11 +48,27 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.light(
           primary: AppColors.dodgerBlue,
           secondary: AppColors.mineShaft,
+          background: Colors.white,
           surface: Colors.white,
           onPrimary: Colors.white,
           onSecondary: Colors.white,
           onSurface: Colors.black87,
           brightness: Brightness.light,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.dodgerBlue,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFF3F4F6),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+        ),
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(color: Colors.black87, fontWeight: FontWeight.w800, fontSize: 20),
         ),
       );
 
@@ -68,11 +84,27 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.dark(
           primary: AppColors.dodgerBlue,
           secondary: AppColors.mineShaft,
+          background: AppColors.mirage,
           surface: AppColors.nileBlue,
           onPrimary: Colors.white,
           onSecondary: Colors.white,
-          onSurface: AppColors.textSecondary,
+          onSurface: Colors.white,
           brightness: Brightness.dark,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.dodgerBlue,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF101820),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+        ),
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20),
         ),
       );
 

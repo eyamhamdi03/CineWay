@@ -139,16 +139,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textColor = colorScheme.onSurface;
+
     return Scaffold(
-      backgroundColor: AppColors.mirage,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.mirage,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.maybePop(context),
         ),
-  title: Text(AppLocalizations.of(context)!.create_profile, style: const TextStyle(fontWeight: FontWeight.w700)),
+  title: Text(AppLocalizations.of(context)!.create_profile, style: TextStyle(fontWeight: FontWeight.w700, color: textColor)),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -166,7 +169,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               Center(
                 child: Text(
                   "Let's get your account personalized.",
-                  style: const TextStyle(color: AppColors.jumbo, fontSize: 16),
+                  style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 16),
                 ),
               ),
 
@@ -181,10 +184,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       height: 110,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.mirageLight, width: 2),
+                        border: Border.all(color: colorScheme.surface.withOpacity(0.12), width: 2),
                       ),
-                      child: const Center(
-                        child: Icon(Icons.camera_alt_outlined, size: 36, color: AppColors.mirageLight),
+                      child: Center(
+                        child: Icon(Icons.camera_alt_outlined, size: 36, color: colorScheme.onSurface.withOpacity(0.7)),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -205,11 +208,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF27455A),
+                          backgroundColor: colorScheme.surface,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: const Text('Upload Picture', style: TextStyle(color: AppColors.dodgerBlue, fontWeight: FontWeight.w700)),
+                        child: Text('Upload Picture', style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w700)),
                       ),
                     ),
                   ],
@@ -223,16 +226,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Full Name', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    Text('Full Name', style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _nameController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: textColor),
                       decoration: InputDecoration(
                         hintText: 'e.g. Alex Doe',
-                        hintStyle: const TextStyle(color: AppColors.mirageLight),
+                        hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
                         filled: true,
-                        fillColor: const Color(0xFF101820),
+                        fillColor: Theme.of(context).inputDecorationTheme.fillColor,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                       ),
@@ -240,16 +243,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     ),
 
                     const SizedBox(height: 14),
-                    const Text('Email', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    Text('Email', style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _emailController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: textColor),
                       decoration: InputDecoration(
                         hintText: 'alex.doe@email.com',
-                        hintStyle: const TextStyle(color: AppColors.mirageLight),
+                        hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
                         filled: true,
-                        fillColor: const Color(0xFF101820),
+                        fillColor: Theme.of(context).inputDecorationTheme.fillColor,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                       ),
@@ -257,7 +260,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     ),
 
                     const SizedBox(height: 14),
-                    const Text('Date of Birth', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    Text('Date of Birth', style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: _pickDob,
@@ -265,10 +268,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         child: TextFormField(
                           decoration: InputDecoration(
                             hintText: 'mm/dd/yyyy',
-                            hintStyle: const TextStyle(color: AppColors.mirageLight),
-                            suffixIcon: const Icon(Icons.calendar_today_outlined, color: AppColors.mirageLight),
+                            hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
+                            suffixIcon: Icon(Icons.calendar_today_outlined, color: textColor.withOpacity(0.6)),
                             filled: true,
-                            fillColor: const Color(0xFF101820),
+                            fillColor: Theme.of(context).inputDecorationTheme.fillColor,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                           ),
@@ -279,7 +282,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     ),
 
                     const SizedBox(height: 18),
-                    const Text('Favorite Genres', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    Text('Favorite Genres', style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 10,
@@ -287,11 +290,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       children: _genres.map((g) {
                         final selected = _selectedGenres.contains(g);
                         return FilterChip(
-                          label: Text(g, style: TextStyle(color: selected ? Colors.white : AppColors.jumbo)),
+                          label: Text(g, style: TextStyle(color: selected ? colorScheme.onPrimary : textColor.withOpacity(0.8))),
                           selected: selected,
                           onSelected: (_) => _toggleGenre(g),
                           selectedColor: AppColors.dodgerBlue,
-                          backgroundColor: const Color(0xFF141A23),
+                          backgroundColor: Theme.of(context).inputDecorationTheme.fillColor,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                         );
@@ -304,14 +307,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(color: const Color(0xFF101820), borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(color: Theme.of(context).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Receive newsletters', style: TextStyle(color: Colors.white)),
+                          Text('Receive newsletters', style: TextStyle(color: textColor)),
                           Switch(
                             value: _newsletter,
-                            activeColor: AppColors.dodgerBlue,
+                            thumbColor: MaterialStateProperty.all(colorScheme.primary),
                             onChanged: (v) => setState(() => _newsletter = v),
                           ),
                         ],
@@ -323,14 +326,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(color: const Color(0xFF101820), borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(color: Theme.of(context).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Push notifications', style: TextStyle(color: Colors.white)),
+                          Text('Push notifications', style: TextStyle(color: textColor)),
                           Switch(
                             value: _pushNotifications,
-                            activeColor: AppColors.dodgerBlue,
+                            thumbColor: MaterialStateProperty.all(colorScheme.primary),
                             onChanged: (v) => setState(() => _pushNotifications = v),
                           ),
                         ],
@@ -344,7 +347,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       child: ElevatedButton(
                           onPressed: _completeProfile,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.dodgerBlue,
+                            backgroundColor: colorScheme.primary,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
@@ -357,7 +360,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       child: RichText(
                         text: TextSpan(
                           text: 'Skip for now',
-                          style: const TextStyle(color: AppColors.dodgerBlue),
+                          style: TextStyle(color: colorScheme.primary),
                           recognizer: TapGestureRecognizer()..onTap = () => Navigator.maybePop(context),
                         ),
                       ),

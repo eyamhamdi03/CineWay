@@ -18,9 +18,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final featured = mockMovies.isNotEmpty ? mockMovies[0] : null;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textColor = colorScheme.onSurface;
 
     return Scaffold(
-      backgroundColor: AppColors.mirage,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -32,20 +34,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('CineWay', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
-                        SizedBox(height: 4),
-                        Text('Hello, Jane!', style: TextStyle(color: AppColors.jumbo, fontSize: 14)),
+                      children: [
+                        Text('CineWay', style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 4),
+                        Text('Hello, Jane!', style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 14)),
                       ],
                     ),
                   ),
-                  IconButton(onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notifications (demo)'))), icon: const Icon(Icons.notifications_none, color: Colors.white)),
+                  IconButton(onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notifications (demo)'))), icon: Icon(Icons.notifications_none, color: textColor)),
                 ],
               ),
             ),
 
             // Search bar
-            const Padding(padding: EdgeInsets.symmetric(horizontal: 18.0), child: CustomSearchBar(placeholder: 'Search movies, theaters...')),
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 18.0), child: CustomSearchBar(placeholder: 'Search movies, theaters...')),
             const SizedBox(height: 12),
 
             // Featured carousel
@@ -63,10 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       fit: StackFit.expand,
                       children: [
                         Container(
-                          decoration: BoxDecoration(color: const Color(0xFF0F1618), borderRadius: BorderRadius.circular(18)),
+                          decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(18)),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(18),
-                            child: movie.bannerUrl.isNotEmpty ? Image.asset(movie.bannerUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0B1113))) : Container(color: const Color(0xFF0B1113)),
+                            child: movie.bannerUrl.isNotEmpty ? Image.asset(movie.bannerUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: colorScheme.background)) : Container(color: colorScheme.background),
                           ),
                         ),
                         Positioned(
@@ -76,9 +78,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(movie.title, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
+                              Text(movie.title, style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w800)),
                               const SizedBox(height: 6),
-                              Text(movie.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.jumbo)),
+                              Text(movie.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: textColor.withOpacity(0.7))),
                             ],
                           ),
                         ),

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/colors.dart';
 import '../services/app_state.dart';
 import 'profile_setup_screen.dart';
-import '../services/i18n.dart';
+import 'package:cineway/l10n/app_localizations.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -15,7 +15,7 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.mirage,
-      appBar: AppBar(title: Text(I18n.t(context, 'profile_title'))),
+  appBar: AppBar(title: Text(AppLocalizations.of(context)!.profile_title)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -35,20 +35,20 @@ class ProfileScreen extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: user == null ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileSetupScreen(user: user))),
                     icon: const Icon(Icons.edit, size: 18),
-                    label: Text(I18n.t(context, 'edit_profile')),
+                    label: Text(AppLocalizations.of(context)!.edit_profile),
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E2933)),
                   ),
                   const SizedBox(width: 12),
                 ],
               ),
               ListTile(
-                title: Text(I18n.t(context, 'dark_mode'), style: const TextStyle(color: Colors.white)),
-                subtitle: Text(I18n.t(context, 'dark_mode_sub'), style: const TextStyle(color: AppColors.jumbo)),
+                title: Text(AppLocalizations.of(context)!.dark_mode, style: const TextStyle(color: Colors.white)),
+                subtitle: Text(AppLocalizations.of(context)!.dark_mode_sub, style: const TextStyle(color: AppColors.jumbo)),
                 trailing: Switch(value: appState.isDark, activeColor: AppColors.dodgerBlue, onChanged: (_) => appState.toggleTheme()),
               ),
               ListTile(
-                title: Text(I18n.t(context, 'language'), style: const TextStyle(color: Colors.white)),
-                subtitle: Text(I18n.t(context, 'language_sub'), style: const TextStyle(color: AppColors.jumbo)),
+                title: Text(AppLocalizations.of(context)!.language, style: const TextStyle(color: Colors.white)),
+                subtitle: Text(AppLocalizations.of(context)!.language_sub, style: const TextStyle(color: AppColors.jumbo)),
                 trailing: DropdownButton<String>(
                   value: appState.language,
                   dropdownColor: const Color(0xFF141A20),
@@ -65,7 +65,7 @@ class ProfileScreen extends StatelessWidget {
                   Navigator.pushNamedAndRemoveUntil(context, '/get_started', (r) => false);
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E2933)),
-                child: Text(I18n.t(context, 'log_out'), style: const TextStyle(color: AppColors.jumbo)),
+                child: Text(AppLocalizations.of(context)!.log_out, style: const TextStyle(color: AppColors.jumbo)),
               ),
             ],
           ),

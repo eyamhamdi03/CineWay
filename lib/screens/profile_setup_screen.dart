@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/colors.dart';
 import 'package:provider/provider.dart';
 import '../services/app_state.dart';
-import '../services/i18n.dart';
+import 'package:cineway/l10n/app_localizations.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   final dynamic user; // optional UserProfile for editing
@@ -148,7 +148,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.maybePop(context),
         ),
-  title: Text(I18n.t(context, 'create_profile'), style: const TextStyle(fontWeight: FontWeight.w700)),
+  title: Text(AppLocalizations.of(context)!.create_profile, style: const TextStyle(fontWeight: FontWeight.w700)),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -348,7 +348,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: Text(I18n.t(context, 'complete_profile'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                          child: Text(AppLocalizations.of(context)!.complete_profile, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                         ),
                     ),
 

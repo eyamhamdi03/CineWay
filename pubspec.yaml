@@ -38,6 +38,8 @@ dependencies:
   shared_preferences: ^2.1.1
   qr_flutter: ^4.0.0
   add_2_calendar: ^2.1.0
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -90,3 +92,11 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+  # Localization (arb files in lib/l10n) configuration for Flutter gen_l10n
+  # Flutter will generate AppLocalizations when ARB files are present in lib/l10n
+  # Optionally configure the output class name and template ARB locale.
+  generate: true
+  # l10n configuration is intentionally omitted to rely on Flutter's defaults.
+  # Place ARB files in lib/l10n (already done) and Flutter will generate
+  # app_localizations during build/gen steps.

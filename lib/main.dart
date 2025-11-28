@@ -4,6 +4,8 @@ import 'package:cineway/screens/login_screen.dart';
 import 'package:cineway/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cineway/l10n/app_localizations.dart';
 
 import 'core/colors.dart';
 import 'screens/movies_screen.dart';
@@ -77,6 +79,9 @@ class MyApp extends StatelessWidget {
       return MaterialApp(
         title: 'CineWay',
         debugShowCheckedModeBanner: false,
+        locale: Locale(appState.language),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: lightTheme,
         darkTheme: darkTheme,
         themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
@@ -121,6 +126,7 @@ class _MainNavigatorState extends State<MainNavigator> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final loc = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: _screens[_selectedIndex],
@@ -130,12 +136,12 @@ class _MainNavigatorState extends State<MainNavigator> {
         selectedItemColor: colorScheme.primary,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.movie), label: 'Movies'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Bookings'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        items: [
+          BottomNavigationBarItem(icon: const Icon(Icons.home), label: loc.home),
+          BottomNavigationBarItem(icon: const Icon(Icons.movie), label: loc.movies),
+          BottomNavigationBarItem(icon: const Icon(Icons.search), label: loc.search),
+          BottomNavigationBarItem(icon: const Icon(Icons.bookmark), label: loc.bookings),
+          BottomNavigationBarItem(icon: const Icon(Icons.person), label: loc.profile),
         ],
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/colors.dart';
 import 'home_screen.dart';
 import 'profile_setup_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -156,7 +157,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         TextButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reset password flow not implemented')));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                            );
                           },
                           child: const Text('Forgot?', style: TextStyle(color: AppColors.dodgerBlue, fontWeight: FontWeight.w600)),
                         ),

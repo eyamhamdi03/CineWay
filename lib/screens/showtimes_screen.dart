@@ -56,15 +56,21 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
     final firstEntry = _selectedTimes.entries.first;
     final cinema = _cinemas[firstEntry.key]['name'] as String;
     final time = firstEntry.value as String;
-    Navigator.push(context, MaterialPageRoute(builder: (_) => SelectSeatsScreen(movieTitle: widget.movieTitle, cinema: cinema, dateTime: time)));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SelectSeatsScreen(movieTitle: widget.movieTitle, cinema: cinema, dateTime: time),
+      ),
+    );
   }
 
-  Widget _buildHeaderCard() {
+  Widget _buildHeaderCard(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A2328),
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -73,19 +79,19 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.movieTitle ?? 'Movie', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                Text(widget.movieTitle ?? 'Movie', style: TextStyle(color: cs.onSurface, fontSize: 18, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 6),
-                const Text('2h 25m | PG-13 | Action, Sci-Fi', style: TextStyle(color: AppColors.jumbo)),
+                Text('2h 25m | PG-13 | Action, Sci-Fi', style: TextStyle(color: AppColors.jumbo)),
               ],
             ),
           ),
           Container(
             width: 72,
             height: 48,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: Colors.black26),
-            child: const ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-              child: Icon(Icons.movie, color: Colors.white, size: 36),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: cs.onSurface.withOpacity(0.06)),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
+              child: Icon(Icons.movie, color: cs.onSurface, size: 36),
             ),
           ),
         ],
@@ -93,7 +99,8 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
     );
   }
 
-  Widget _dateChips() {
+  Widget _dateChips(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -102,11 +109,11 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
           return Padding(
             padding: const EdgeInsets.only(right: 10),
             child: ChoiceChip(
-              label: Text(_dates[i], style: TextStyle(color: selected ? Colors.white : AppColors.jumbo)),
+              label: Text(_dates[i], style: TextStyle(color: selected ? cs.onPrimary : cs.onSurface.withOpacity(0.85))),
               selected: selected,
               onSelected: (_) => setState(() => _selectedDateIndex = i),
-              selectedColor: AppColors.dodgerBlue,
-              backgroundColor: const Color(0xFF141A20),
+              selectedColor: cs.primary,
+              backgroundColor: cs.surfaceVariant,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               labelStyle: const TextStyle(fontWeight: FontWeight.w600),
             ),
@@ -116,7 +123,8 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
     );
   }
 
-  Widget _filterRow() {
+  Widget _filterRow(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         Expanded(
@@ -124,8 +132,8 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
             onTap: () => _toggleFilter(true),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(color: _filterByTime ? AppColors.dodgerBlue : const Color(0xFF141A20), borderRadius: BorderRadius.circular(10)),
-              child: const Center(child: Text('Time', style: TextStyle(fontWeight: FontWeight.w600))),
+              decoration: BoxDecoration(color: _filterByTime ? cs.primary : cs.surfaceVariant, borderRadius: BorderRadius.circular(10)),
+              child: Center(child: Text('Time', style: TextStyle(fontWeight: FontWeight.w600, color: _filterByTime ? cs.onPrimary : cs.onSurface))),
             ),
           ),
         ),
@@ -135,8 +143,8 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
             onTap: () => _toggleFilter(false),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(color: !_filterByTime ? AppColors.dodgerBlue : const Color(0xFF141A20), borderRadius: BorderRadius.circular(10)),
-              child: const Center(child: Text('Cinema', style: TextStyle(fontWeight: FontWeight.w600))),
+              decoration: BoxDecoration(color: !_filterByTime ? cs.primary : cs.surfaceVariant, borderRadius: BorderRadius.circular(10)),
+              child: Center(child: Text('Cinema', style: TextStyle(fontWeight: FontWeight.w600, color: !_filterByTime ? cs.onPrimary : cs.onSurface))),
             ),
           ),
         ),
@@ -144,15 +152,16 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
     );
   }
 
-  Widget _cinemaSection(int index, Map<String, dynamic> cinema) {
+  Widget _cinemaSection(BuildContext context, int index, Map<String, dynamic> cinema) {
+    final cs = Theme.of(context).colorScheme;
     final times = (cinema['times'] as List<String>);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
-        Text(cinema['name'], style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+        Text(cinema['name'], style: TextStyle(color: cs.onSurface, fontSize: 18, fontWeight: FontWeight.w800)),
         const SizedBox(height: 4),
-        Text(cinema['distance'], style: const TextStyle(color: AppColors.jumbo)),
+        Text(cinema['distance'], style: TextStyle(color: AppColors.jumbo)),
         const SizedBox(height: 12),
         Wrap(
           spacing: 12,
@@ -168,15 +177,15 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 decoration: BoxDecoration(
-                  color: selected ? AppColors.dodgerBlue : const Color(0xFF141A20),
+                  color: selected ? cs.primary : cs.surfaceVariant,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(main, style: TextStyle(color: selected ? Colors.black : Colors.white, fontWeight: FontWeight.w700)),
+                    Text(main, style: TextStyle(color: selected ? cs.onPrimary : cs.onSurface, fontWeight: FontWeight.w700)),
                     if (tag != null) const SizedBox(height: 4),
-                    if (tag != null) Text(tag, style: TextStyle(color: selected ? Colors.black : AppColors.dodgerBlue, fontSize: 12, fontWeight: FontWeight.w700)),
+                    if (tag != null) Text(tag, style: TextStyle(color: selected ? cs.onPrimary : AppColors.dodgerBlue, fontSize: 12, fontWeight: FontWeight.w700)),
                   ],
                 ),
               ),
@@ -189,31 +198,32 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppColors.mirage,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.mirage,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.maybePop(context)),
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor), onPressed: () => Navigator.maybePop(context)),
         centerTitle: true,
-        title: const Text('Showtimes', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: Text('Showtimes', style: TextStyle(fontWeight: FontWeight.w700, color: Theme.of(context).appBarTheme.foregroundColor)),
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           child: Column(
             children: [
-              _buildHeaderCard(),
+              _buildHeaderCard(context),
               const SizedBox(height: 14),
-              _dateChips(),
+              _dateChips(context),
               const SizedBox(height: 12),
-              _filterRow(),
+              _filterRow(context),
               const SizedBox(height: 12),
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: List.generate(_cinemas.length, (i) => _cinemaSection(i, _cinemas[i])),
+                    children: List.generate(_cinemas.length, (i) => _cinemaSection(context, i, _cinemas[i])),
                   ),
                 ),
               ),
@@ -223,8 +233,8 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
                 height: 56,
                 child: ElevatedButton(
                   onPressed: _continue,
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.dodgerBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
-                  child: const Text('Continue', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black)),
+                  style: ElevatedButton.styleFrom(backgroundColor: cs.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
+                  child: Text('Continue', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: cs.onPrimary)),
                 ),
               ),
               const SizedBox(height: 8),

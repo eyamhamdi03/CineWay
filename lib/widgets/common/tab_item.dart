@@ -28,7 +28,9 @@ class TabItem extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: active ? Colors.black : Colors.white70,
+            color: active
+                ? Theme.of(context).colorScheme.onPrimary
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
             fontWeight: active ? FontWeight.bold : FontWeight.normal,
           ),
         ),

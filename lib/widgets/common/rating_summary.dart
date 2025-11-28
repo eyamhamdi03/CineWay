@@ -14,6 +14,8 @@ class RatingSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
 
@@ -22,8 +24,8 @@ class RatingSummary extends StatelessWidget {
           children: [
             Text(
               averageRating.toStringAsFixed(1),
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: colorScheme.onSurface,
                 fontSize: 46,
                 fontWeight: FontWeight.bold,
               ),
@@ -35,7 +37,7 @@ class RatingSummary extends StatelessWidget {
             Row(
               children: List.generate(
                 5,
-                    (i) => const Icon(Icons.star, color: Colors.blue, size: 20),
+                    (i) => Icon(Icons.star, color: colorScheme.primary, size: 20),
               ),
             ),
 
@@ -43,8 +45,8 @@ class RatingSummary extends StatelessWidget {
 
             Text(
               "$totalReviews reviews",
-              style: const TextStyle(
-                color: Colors.white60,
+              style: TextStyle(
+                color: colorScheme.onSurface.withOpacity(0.6),
                 fontSize: 14,
               ),
             ),
@@ -68,16 +70,16 @@ class RatingSummary extends StatelessWidget {
                     width: 18,
                     child: Text(
                       star.toString(),
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: colorScheme.onSurface),
                     ),
                   ),
 
                   // Progress bar
-                  Container(
+                    Container(
                     width: 120,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: Colors.white12,
+                      color: colorScheme.onSurface.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: FractionallySizedBox(
@@ -97,7 +99,7 @@ class RatingSummary extends StatelessWidget {
                   // Percentage
                   Text(
                     "${percent.toInt()}%",
-                    style: const TextStyle(color: Colors.white60),
+                    style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6)),
                   ),
                 ],
               ),

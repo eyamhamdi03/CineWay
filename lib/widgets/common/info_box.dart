@@ -8,11 +8,12 @@ class InfoBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: 100,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white12,
+        color: cs.onSurface.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -20,7 +21,7 @@ class InfoBox extends StatelessWidget {
           Icon(icon, color: AppColors.cerulean),
           const SizedBox(height: 6),
           Text(label,
-              style: const TextStyle(color: Colors.white, fontSize: 14)),
+              style: TextStyle(color: cs.onSurface, fontSize: 14)),
         ],
       ),
     );

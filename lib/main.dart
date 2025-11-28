@@ -68,7 +68,7 @@ class MyApp extends StatelessWidget {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
         ),
         textTheme: const TextTheme(
-          titleLarge: TextStyle(color: Colors.black87, fontWeight: FontWeight.w800, fontSize: 20),
+          titleLarge: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
         ),
       );
 
@@ -104,7 +104,7 @@ class MyApp extends StatelessWidget {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
         ),
         textTheme: const TextTheme(
-          titleLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20),
+          titleLarge: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
         ),
       );
 

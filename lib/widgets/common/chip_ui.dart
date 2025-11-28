@@ -6,9 +6,10 @@ class ChipUI extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Chip(
-      backgroundColor: Colors.white12,
-      label: Text(text, style: const TextStyle(color: Colors.white)),
+      backgroundColor: cs.onSurface.withOpacity(0.12),
+      label: Text(text, style: TextStyle(color: cs.onSurface)),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20.0),
       ),

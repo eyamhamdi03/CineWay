@@ -7,6 +7,7 @@ class CastItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: 80,
       margin: const EdgeInsets.only(right: 12),
@@ -20,7 +21,7 @@ class CastItem extends StatelessWidget {
           Text(name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white)),
+              style: TextStyle(color: cs.onSurface)),
         ],
       ),
     );

@@ -142,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemBuilder: (context, index) {
                     final m = mockMovies[index];
                     return GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MovieDetailsScreen(movie: m))),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MovieDetailsScreen(movieId: 0,))),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

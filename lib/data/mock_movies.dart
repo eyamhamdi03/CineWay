@@ -13,7 +13,7 @@ final List<Movie> mockMovies = [
     categories: ["Action", "Sci-Fi", "Adventure"],
     duration: "2h 46m",
     releaseYear: 2024,
-    rating: 4.8,
+    rating: "4.8",
     cast: [
       Cast(name: "Timothée Chalamet", imageUrl: "assets/timo.png"),
       Cast(name: "Zendaya", imageUrl: "assets/zen.png"),
@@ -26,9 +26,8 @@ final List<Movie> mockMovies = [
         reviewerName: "Alex Morgan",
         reviewerAvatar: "user1.png",
         rating: 5,
-        comment:
-        "An absolute masterpiece! The cinematography was breathtaking.",
-        timeAgo: "2 weeks ago",
+        comment: "An absolute masterpiece! The cinematography was breathtaking.",
+        createdAt: DateTime.now().subtract(Duration(days: 14)), // 2 weeks ago
         likes: 125,
         dislikes: 3,
       ),
@@ -37,9 +36,8 @@ final List<Movie> mockMovies = [
         reviewerName: "Casey Lee",
         reviewerAvatar: "user2.png",
         rating: 4,
-        comment:
-        "Really great movie, although some parts felt a bit slow.",
-        timeAgo: "1 month ago",
+        comment: "Really great movie, although some parts felt a bit slow.",
+        createdAt: DateTime.now().subtract(Duration(days: 30)), // 1 month ago
         likes: 98,
         dislikes: 12,
       ),
@@ -48,9 +46,8 @@ final List<Movie> mockMovies = [
         reviewerName: "Jordan Taylor",
         reviewerAvatar: "user3.png",
         rating: 3,
-        comment:
-        "It was okay. Good effects but predictable plot.",
-        timeAgo: "3 months ago",
+        comment: "It was okay. Good effects but predictable plot.",
+        createdAt: DateTime.now().subtract(Duration(days: 90)), // 3 months ago
         likes: 24,
         dislikes: 31,
       ),
@@ -59,34 +56,31 @@ final List<Movie> mockMovies = [
         reviewerName: "Jordan Taylor",
         reviewerAvatar: "user3.png",
         rating: 3,
-        comment:
-        "It was okay. Good effects but predictable plot.",
-        timeAgo: "3 months ago",
+        comment: "It was okay. Good effects but predictable plot.",
+        createdAt: DateTime.now().subtract(Duration(days: 90)),
         likes: 24,
         dislikes: 31,
-      ),Review(
+      ),
+      Review(
         reviewId: 5,
         reviewerName: "Jordan Taylor",
         reviewerAvatar: "user3.png",
         rating: 3,
-        comment:
-        "It was okay. Good effects but predictable plot.",
-        timeAgo: "3 months ago",
+        comment: "It was okay. Good effects but predictable plot.",
+        createdAt: DateTime.now().subtract(Duration(days: 90)),
         likes: 24,
         dislikes: 31,
-      ),Review(
+      ),
+      Review(
         reviewId: 6,
         reviewerName: "Jordan Taylor",
         reviewerAvatar: "user3.png",
         rating: 3,
-        comment:
-        "It was okay. Good effects but predictable plot.",
-        timeAgo: "3 months ago",
+        comment: "It was okay. Good effects but predictable plot.",
+        createdAt: DateTime.now().subtract(Duration(days: 90)),
         likes: 24,
         dislikes: 31,
       ),
-
-
     ],
   ),
 ];

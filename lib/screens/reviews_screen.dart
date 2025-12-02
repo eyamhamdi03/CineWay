@@ -1,66 +1,57 @@
 import 'package:cineway/core/colors.dart';
 import 'package:flutter/material.dart';
-import 'package:cineway/models/movie.dart';
+import 'package:provider/provider.dart';
 
-import '../models/review.dart';
+import '../models/movie.dart';
+import '../viewmodel/movie/movie_review_viewmodel.dart';
 import '../widgets/common/rating_summary.dart';
 import 'add_review_screen.dart';
 
-class ReviewsScreen extends StatefulWidget {
+class ReviewsScreen extends StatelessWidget {
   final Movie movie;
 
   const ReviewsScreen({super.key, required this.movie});
 
   @override
-  State<ReviewsScreen> createState() => _ReviewsScreenState();
-}
-
-class _ReviewsScreenState extends State<ReviewsScreen> {
-  Map<int, bool> userLikes = {};
-  Map<int, bool> userDislikes = {};
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.nileBlue2,
+    final vm = context.watch<ReviewViewModel>();
 
+    return Scaffold(
+      backgroundColor: AppColors.mirage,
       appBar: AppBar(
-        backgroundColor: AppColors.nileBlue2,
+        backgroundColor: AppColors.mirage,
         title: const Text(
           "Reviews",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
-
       body: Stack(
         children: [
-          // MAIN COLUMN
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Rating summary
+              // Rating Summary
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: RatingSummary(
-                  averageRating: widget.movie.rating,
-                  totalReviews: widget.movie.reviews.length,
+                  averageRating: 4,
+                  totalReviews: movie.reviews.length,
                   percentages: [85, 9, 3, 2, 1],
                 ),
               ),
-
               const SizedBox(height: 20),
 
-              // REVIEWS LIST
+              // Reviews list
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: widget.movie.reviews.length,
+                  itemCount: movie.reviews.length,
                   itemBuilder: (context, index) {
-                    final review = widget.movie.reviews[index];
-                    final reviewId = index; // Always safe
+                    final review = movie.reviews[index];
+                    final reviewId = review.reviewId ?? index;
 
-                    final isLiked = userLikes[reviewId] == true;
-                    final isDisliked = userDislikes[reviewId] == true;
+                    final isLiked = vm.userLikes[reviewId] == true;
+                    final isDisliked = vm.userDislikes[reviewId] == true;
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 18),
@@ -76,7 +67,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                 backgroundImage:
                                 AssetImage(review.reviewerAvatar),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 10),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -88,12 +79,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                   Text(
                                     review.timeAgo,
                                     style: const TextStyle(
-                                      color: Colors.white54,
-                                      fontSize: 12,
-                                    ),
+                                        color: Colors.white54, fontSize: 12),
                                   ),
                                 ],
-                              )
+                              ),
                             ],
                           ),
 
@@ -115,7 +104,6 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 
                           const SizedBox(height: 12),
 
-                          // Review comment
                           Text(
                             review.comment,
                             style: const TextStyle(
@@ -124,23 +112,11 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 
                           const SizedBox(height: 6),
 
-                          // LIKE + DISLIKE
+                          // LIKE / DISLIKE
                           Row(
                             children: [
-                              // LIKE
                               InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    if (!isLiked) {
-                                      review.likes++;
-                                      userLikes[reviewId] = true;
-                                      userDislikes.remove(reviewId);
-                                    } else {
-                                      review.likes--;
-                                      userLikes.remove(reviewId);
-                                    }
-                                  });
-                                },
+                                onTap: () => vm.toggleLike(reviewId),
                                 child: Row(
                                   children: [
                                     Icon(
@@ -155,29 +131,16 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                     const SizedBox(width: 4),
                                     Text(
                                       review.likes.toString(),
-                                      style: const TextStyle(
-                                          color: Colors.white),
+                                      style:
+                                      const TextStyle(color: Colors.white),
                                     ),
                                   ],
                                 ),
                               ),
-
                               const SizedBox(width: 20),
 
-                              // DISLIKE
                               InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    if (!isDisliked) {
-                                      review.dislikes++;
-                                      userDislikes[reviewId] = true;
-                                      userLikes.remove(reviewId);
-                                    } else {
-                                      review.dislikes--;
-                                      userDislikes.remove(reviewId);
-                                    }
-                                  });
-                                },
+                                onTap: () => vm.toggleDislike(reviewId),
                                 child: Row(
                                   children: [
                                     Icon(
@@ -192,8 +155,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                     const SizedBox(width: 4),
                                     Text(
                                       review.dislikes.toString(),
-                                      style: const TextStyle(
-                                          color: Colors.white),
+                                      style:
+                                      const TextStyle(color: Colors.white),
                                     ),
                                   ],
                                 ),
@@ -209,39 +172,24 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             ],
           ),
 
-          // FIXED BUTTON
+          // ADD REVIEW BUTTON
           Positioned(
             bottom: 20,
             right: 20,
             child: GestureDetector(
-                onTap: () async {
-                  final result = await showDialog<NewReviewData>(
-                    context: context,
-                    builder: (context) => AddReviewScreen(),
-                  );
+              onTap: () async {
+                final result = await showDialog<NewReviewData>(
+                  context: context,
+                  builder: (_) => AddReviewScreen(),
+                );
 
-                  if (result != null) {
-                    setState(() {
-                      widget.movie.reviews.add(
-                        Review(
-                          reviewId: widget.movie.reviews.length,
-                          reviewerName: "You",
-                          reviewerAvatar: "assets/images/default_avatar.png",
-                          rating: result.rating,
-                          comment: result.comment,
-                          timeAgo: "Just now",
-                          likes: 0,
-                          dislikes: 0,
-                        ),
-                      );
-                    });
-                  }
-                },
-
+                if (result != null) {
+                  vm.addReview(result.rating, result.comment);
+                }
+              },
               child: Container(
                 height: 55,
-                width: 150, // fixed width
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                width: 150,
                 decoration: BoxDecoration(
                   color: AppColors.cerulean,
                   borderRadius: BorderRadius.circular(20),
@@ -251,10 +199,9 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                   children: [
                     Icon(Icons.edit_outlined, color: Colors.white, size: 22),
                     SizedBox(width: 8),
-                    Text(
-                      "Add Review",
-                      style: TextStyle(color: Colors.white, fontSize: 15),
-                    ),
+                    Text("Add Review",
+                        style:
+                        TextStyle(color: Colors.white, fontSize: 15)),
                   ],
                 ),
               ),

@@ -1,29 +1,52 @@
-// details screen no longer part of bottom nav
-import 'package:cineway/screens/home_screen.dart';
-import 'package:cineway/screens/login_screen.dart';
-import 'package:cineway/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:cineway/l10n/app_localizations.dart';
 
 import 'core/colors.dart';
+import 'l10n/app_localizations.dart';
+
+import 'screens/details_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/search_screen.dart';
 import 'screens/movies_screen.dart';
 import 'screens/profile_setup_screen.dart';
 import 'screens/bookings_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/get_started_screen.dart';
 import 'screens/booking_confirmation_screen.dart';
+
 import 'services/app_state.dart';
+import 'repository/movie_repository.dart';
+import 'repository/cinema_repository.dart';
+
+import 'viewmodel/movie/movie_detail_viewmodel.dart';
+import 'viewmodel/search_viewmodel.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) {
-        final s = AppState();
-        s.load();
-        return s;
-      },
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) {
+            final s = AppState();
+            s.load();
+            return s;
+          },
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => SearchViewModel(
+            movieRepo: MovieRepository(),
+            cinemaRepo: CinemaRepository(),
+          ),
+        ),
+
+        // Movie details ViewModel
+        ChangeNotifierProvider(
+          create: (_) => MovieDetailViewModel(MovieRepository()),
+        ),
+      ],
       child: const MyApp(),
     ),
   );
@@ -36,6 +59,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AppState>(builder: (context, appState, _) {
       final isDark = appState.isDark;
+
       final lightTheme = ThemeData(
         brightness: Brightness.light,
         primaryColor: AppColors.dodgerBlue,
@@ -44,31 +68,6 @@ class MyApp extends StatelessWidget {
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           elevation: 0,
-        ),
-        colorScheme: ColorScheme.light(
-          primary: AppColors.dodgerBlue,
-          secondary: AppColors.mineShaft,
-          background: Colors.white,
-          surface: Colors.white,
-          onPrimary: Colors.white,
-          onSecondary: Colors.white,
-          onSurface: Colors.black87,
-          brightness: Brightness.light,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.dodgerBlue,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFFF3F4F6),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-        ),
-        textTheme: const TextTheme(
-          titleLarge: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
         ),
       );
 
@@ -80,31 +79,6 @@ class MyApp extends StatelessWidget {
           backgroundColor: AppColors.mirage,
           foregroundColor: Colors.white,
           elevation: 0,
-        ),
-        colorScheme: ColorScheme.dark(
-          primary: AppColors.dodgerBlue,
-          secondary: AppColors.mineShaft,
-          background: AppColors.mirage,
-          surface: AppColors.nileBlue,
-          onPrimary: Colors.white,
-          onSecondary: Colors.white,
-          onSurface: Colors.white,
-          brightness: Brightness.dark,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.dodgerBlue,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFF101820),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-        ),
-        textTheme: const TextTheme(
-          titleLarge: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
         ),
       );
 
@@ -157,15 +131,12 @@ class _MainNavigatorState extends State<MainNavigator> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final loc = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        selectedItemColor: colorScheme.primary,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: [

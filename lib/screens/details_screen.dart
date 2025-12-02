@@ -1,29 +1,46 @@
 import 'package:cineway/core/colors.dart';
-import 'package:cineway/data/mock_movies.dart';
-import 'package:cineway/models/movie.dart';
 import 'package:cineway/screens/reviews_screen.dart';
 import 'package:cineway/screens/showtimes_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../viewmodel/movie/movie_detail_viewmodel.dart';
+import '../viewmodel/movie/movie_review_viewmodel.dart';
 import '../widgets/common/cast_item.dart';
 import '../widgets/common/chip_ui.dart';
 import '../widgets/common/info_box.dart';
 import '../widgets/common/tab_item.dart';
 
 class MovieDetailsScreen extends StatelessWidget {
-  final Movie? movie;
+  final int movieId;
 
-  const MovieDetailsScreen({super.key, this.movie});
+  const MovieDetailsScreen({super.key, required this.movieId});
 
   @override
   Widget build(BuildContext context) {
-  final Movie m = movie ?? mockMovies[0];
+    final vm = context.watch<MovieDetailViewModel>();
+
+    // Trigger load only once
+    if (vm.movie == null && !vm.isLoading) {
+      Future.microtask(() => vm.loadMovieById(movieId));
+    }
+
+    // Loading state
+    if (vm.isLoading || vm.movie == null) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
+    final movie = vm.movie!;
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: CustomScrollView(
         slivers: [
-          // Header Image
           SliverAppBar(
             expandedHeight: 380,
             pinned: true,
@@ -51,14 +68,19 @@ class MovieDetailsScreen extends StatelessWidget {
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: Image.asset(
-                m.bannerUrl,
+              background: Image.network(
+                movie.bannerUrl,
                 fit: BoxFit.cover,
+                errorBuilder: (ctx, _, __) => Container(
+                  color: Colors.grey,
+                  child: const Center(
+                    child: Icon(Icons.broken_image, color: Colors.white),
+                  ),
+                ),
               ),
             ),
           ),
 
-          // Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -66,9 +88,9 @@ class MovieDetailsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
 
-                  // Movie Title
+                  // TITLE
                   Text(
-                    m.title,
+                    movie.title,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
@@ -77,28 +99,31 @@ class MovieDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Categories
+                  // GENRES
                   Wrap(
                     spacing: 8,
-                    children: m.categories
+                    children: movie.categories
                         .map((cat) => ChipUI(cat))
                         .toList(),
                   ),
                   const SizedBox(height: 20),
 
-                  // Info Box Row
+                  // INFO BOX
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      InfoBox(icon: Icons.calendar_month, label: m.releaseYear.toString()),
-                      InfoBox(icon: Icons.timer, label: m.duration),
-                      const InfoBox(icon: Icons.shield, label: "PG-13"),
+                      InfoBox(
+                        icon: Icons.calendar_month,
+                        label: movie.releaseYear.toString(),
+                      ),
+                      InfoBox(icon: Icons.timer, label: movie.duration),
+                      InfoBox(icon: Icons.shield, label: movie.rating),
                     ],
                   ),
 
                   const SizedBox(height: 25),
 
-                  // Tabs Container
+                  // TABS
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
@@ -108,8 +133,11 @@ class MovieDetailsScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        TabItem(label: "About Movie", active: true, onTap: () {}),
-
+                        TabItem(
+                          label: "About Movie",
+                          active: true,
+                          onTap: () {},
+                        ),
                         TabItem(
                           label: "Reviews",
                           active: false,
@@ -117,22 +145,34 @@ class MovieDetailsScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ReviewsScreen(movie: m),
+                                builder: (_) => ChangeNotifierProvider(
+                                  create: (_) => ReviewViewModel(movie),
+                                  child: ReviewsScreen(movie: movie),
+                                ),
                               ),
                             );
                           },
                         ),
-
-                        TabItem(label: "Showtimes", active: false, onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => ShowtimesScreen(movieTitle: m.title)));
-                        }),
+                        TabItem(
+                          label: "Showtimes",
+                          active: false,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    ShowtimesScreen(movieTitle: movie.title),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
 
                   const SizedBox(height: 20),
 
-                  // Synopsis
+                  // SYNOPSIS
                   const Text(
                     "Synopsis",
                     style: TextStyle(
@@ -144,13 +184,16 @@ class MovieDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   Text(
-                    m.description, // ← dynamic
-                    style: const TextStyle(color: Colors.white70, height: 1.4),
+                    movie.description,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      height: 1.4,
+                    ),
                   ),
 
                   const SizedBox(height: 20),
 
-                  // Cast Title
+                  // CAST
                   const Text(
                     "Cast",
                     style: TextStyle(
@@ -159,23 +202,22 @@ class MovieDetailsScreen extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 12),
 
-                  // Cast List
                   SizedBox(
                     height: 110,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
-                      children: m.cast
-                          .map((actor) => CastItem(actor.name, actor.imageUrl))
+                      children: movie.cast
+                          .map((actor) =>
+                          CastItem(actor.name, actor.imageUrl))
                           .toList(),
                     ),
                   ),
 
                   const SizedBox(height: 25),
 
-                  // Buy Tickets Button
+                  // BUTTON
                   SizedBox(
                     width: double.infinity,
                     height: 46,
@@ -187,7 +229,13 @@ class MovieDetailsScreen extends StatelessWidget {
                         ),
                       ),
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => ShowtimesScreen(movieTitle: m.title)));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ShowtimesScreen(movieTitle: movie.title),
+                          ),
+                        );
                       },
                       child: const Text(
                         "Buy Tickets",

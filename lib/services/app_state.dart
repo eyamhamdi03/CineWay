@@ -122,7 +122,7 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // Authentication (mock)
+  // Authentication (legacy mock - kept for backward compatibility)
   Future<bool> signUp(String email, String password) async {
     // simple mock signup: create user and mark signed in
     await Future.delayed(const Duration(milliseconds: 400));
@@ -141,6 +141,27 @@ class AppState extends ChangeNotifier {
     await _savePrefs();
     notifyListeners();
     return true;
+  }
+
+  // Authentication (API-based from AuthViewModel)
+  /// Sign up via API
+  void signUpFromAPI({required String email, required String userId}) {
+    _user = UserProfile(id: userId, email: email, fullName: '');
+    _signedIn = true;
+    _savePrefs();
+    notifyListeners();
+  }
+
+  /// Sign in via API
+  void signInFromAPI({
+    required String email,
+    required String userId,
+    String? accessToken,
+  }) {
+    _user = UserProfile(id: userId, email: email, fullName: '');
+    _signedIn = true;
+    _savePrefs();
+    notifyListeners();
   }
 
   void signOut() {

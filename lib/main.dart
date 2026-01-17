@@ -19,9 +19,11 @@ import 'screens/booking_confirmation_screen.dart';
 import 'services/app_state.dart';
 import 'repository/movie_repository.dart';
 import 'repository/cinema_repository.dart';
+import 'repository/auth_repository.dart';
 
 import 'viewmodel/movie/movie_detail_viewmodel.dart';
 import 'viewmodel/search_viewmodel.dart';
+import 'viewmodel/auth_view_model.dart';
 
 void main() {
   runApp(
@@ -33,6 +35,13 @@ void main() {
             s.load();
             return s;
           },
+        ),
+
+        ChangeNotifierProvider(
+          create: (context) => AuthViewModel(
+            authRepository: AuthRepository(),
+            appState: context.read<AppState>(),
+          ),
         ),
 
         ChangeNotifierProvider(

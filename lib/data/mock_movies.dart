@@ -13,6 +13,7 @@ final List<Movie> mockMovies = [
     categories: ["Action", "Sci-Fi", "Adventure"],
     duration: "2h 46m",
     releaseYear: 2024,
+    releaseDate: DateTime.tryParse("20/12/2025"),
     rating: "4.8",
     cast: [
       Cast(name: "Timothée Chalamet", imageUrl: "assets/timo.png"),

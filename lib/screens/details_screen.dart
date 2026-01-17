@@ -21,9 +21,10 @@ class MovieDetailsScreen extends StatelessWidget {
     final vm = context.watch<MovieDetailViewModel>();
 
     // Trigger load only once
-    if (vm.movie == null && !vm.isLoading) {
+    if (vm.currentMovieId != movieId && !vm.isLoading) {
       Future.microtask(() => vm.loadMovieById(movieId));
     }
+
 
     // Loading state
     if (vm.isLoading || vm.movie == null) {

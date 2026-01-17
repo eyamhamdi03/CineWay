@@ -5,15 +5,14 @@ class Movie {
   final int id;
   final String title;
   final String description;
-
   final String bannerUrl;
-
-  final List<String> categories; // from genre
-  final String duration;         // from duration_minutes → string
-  final int releaseYear;         // parsed from release_date
-  final String rating;           // String, not double
-  final List<Cast> cast;       // simple list
-  final List<Review> reviews;    // empty for now
+  final List<String> categories;
+  final String duration;
+  final DateTime? releaseDate;
+  final int releaseYear;
+  final String rating;
+  final List<Cast> cast;
+  final List<Review> reviews;
 
   Movie({
     required this.id,
@@ -22,6 +21,7 @@ class Movie {
     required this.bannerUrl,
     required this.categories,
     required this.duration,
+    required this.releaseDate,
     required this.releaseYear,
     required this.rating,
     required this.cast,
@@ -29,26 +29,26 @@ class Movie {
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
+    final rd = DateTime.tryParse((json["release_date"] ?? "").toString());
+
     return Movie(
       id: json["id"],
       title: json["title"],
       description: json["description"] ?? "",
-      bannerUrl: json["image_url"] ?? "",
+      bannerUrl: json["image_url"] ?? "",   // should be a URL
       categories: List<String>.from(json["genre"] ?? []),
       duration: json["duration_minutes"]?.toString() ?? "",
-      releaseYear:
-      DateTime.tryParse(json["release_date"] ?? "")?.year ?? 0,
-      rating: json["rating"] ?? "",
+      releaseDate: rd,
+      releaseYear: rd?.year ?? 0,
+      rating: (json["rating"] ?? "").toString(),
       cast: (json["cast"] as List? ?? []).map((c) {
-        if (c is Map<String, dynamic>) {
-          return Cast.fromJson(c);
-        } else {
-          return Cast(name: c.toString(), imageUrl: "");
-        }
+        if (c is Map<String, dynamic>) return Cast.fromJson(c);
+        return Cast(name: c.toString(), imageUrl: "");
       }).toList(),
-      reviews: [], // backend does not send reviews yet
+      reviews: [],
     );
   }
+
 
   Map<String, dynamic> toJson() {
     return {

@@ -4,6 +4,7 @@ import '../../models/movie.dart';
 import '../../models/cinema.dart';
 import '../../repository/movie_repository.dart';
 import '../../repository/cinema_repository.dart';
+import 'dart:async' show Timer, unawaited;
 
 class SearchViewModel extends ChangeNotifier {
   final MovieRepository movieRepo;
@@ -23,12 +24,23 @@ class SearchViewModel extends ChangeNotifier {
   Timer? _debounce;
 
   void onSearchChanged(String query) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce?.cancel();
 
-    _debounce = Timer(const Duration(milliseconds: 400), () {
-      search(query);
+    final q = query.trim();
+
+    if (q.isEmpty) {
+      movieResults = [];
+      cinemaResults = [];
+      isLoading = false;
+      notifyListeners();
+      return;
+    }
+
+    _debounce = Timer(const Duration(milliseconds: 200), () {
+      unawaited(search(q));
     });
   }
+
 
   Future<void> search(String query) async {
     if (query.trim().isEmpty) {

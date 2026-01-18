@@ -6,6 +6,8 @@ import 'details_screen.dart';
 
 import '../models/movie.dart';
 import '../repository/movie_repository.dart';
+import 'package:provider/provider.dart';
+import '../viewmodel/session/session_viewmodel.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -67,6 +69,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final session = context.watch<SessionViewModel>();
+    final name = (session.user?.fullName?.trim().isNotEmpty ?? false)
+        ? session.user!.fullName!.trim()
+        : (session.user?.email?.split('@').first ?? 'Guest');
+
     final colorScheme = Theme.of(context).colorScheme;
     final textColor = colorScheme.onSurface;
 
@@ -96,11 +103,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontWeight: FontWeight.w800,
                             )),
                         const SizedBox(height: 4),
-                        Text('Hello, Jane!',
-                            style: TextStyle(
-                              color: textColor.withOpacity(0.7),
-                              fontSize: 14,
-                            )),
+                        Text(
+                          'Hello, $name!',
+                          style: TextStyle(
+                            color: textColor.withOpacity(0.7),
+                            fontSize: 14,
+                          ),
+                        ),
+
                       ],
                     ),
                   ),
@@ -114,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-
+           
             const SizedBox(height: 12),
 
             // Loading / Error

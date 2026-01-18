@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/colors.dart';
 import 'l10n/app_localizations.dart';
 
-import 'screens/details_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/search_screen.dart';
@@ -16,7 +14,6 @@ import 'screens/profile_screen.dart';
 import 'screens/get_started_screen.dart';
 import 'screens/booking_confirmation_screen.dart';
 
-import 'services/app_state.dart';
 import 'repository/movie_repository.dart';
 import 'repository/cinema_repository.dart';
 import 'repository/auth_repository.dart';
@@ -25,22 +22,39 @@ import 'viewmodel/movie/movie_detail_viewmodel.dart';
 import 'viewmodel/search_viewmodel.dart';
 import 'viewmodel/auth_view_model.dart';
 
+import 'services/local_storage.dart';
+import 'viewmodel/settings/settings_viewmodel.dart';
+import 'viewmodel/session/session_viewmodel.dart';
+import 'viewmodel/bookings/bookings_viewmodel.dart';
+
 void main() {
+  final storage = LocalStorage();
+
   runApp(
     MultiProvider(
       providers: [
+        Provider<LocalStorage>.value(value: storage),
+
+        // Settings (theme + language)
         ChangeNotifierProvider(
-          create: (_) {
-            final s = AppState();
-            s.load();
-            return s;
-          },
+          create: (_) => SettingsViewModel(storage)..load(),
         ),
 
+        // Session (user + token)
+        ChangeNotifierProvider(
+          create: (_) => SessionViewModel(storage)..load(),
+        ),
+
+        // Bookings
+        ChangeNotifierProvider(
+          create: (_) => BookingsViewModel(storage)..load(),
+        ),
+
+        // Auth VM uses Session VM (not AppState anymore)
         ChangeNotifierProvider(
           create: (context) => AuthViewModel(
             authRepository: AuthRepository(),
-            appState: context.read<AppState>(),
+            session: context.read<SessionViewModel>(),
           ),
         ),
 
@@ -51,7 +65,6 @@ void main() {
           ),
         ),
 
-        // Movie details ViewModel
         ChangeNotifierProvider(
           create: (_) => MovieDetailViewModel(MovieRepository()),
         ),
@@ -66,8 +79,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppState>(builder: (context, appState, _) {
-      final isDark = appState.isDark;
+    return Consumer<SettingsViewModel>(builder: (context, settings, _) {
+      final isDark = settings.isDark;
 
       final lightTheme = ThemeData(
         brightness: Brightness.light,
@@ -94,7 +107,7 @@ class MyApp extends StatelessWidget {
       return MaterialApp(
         title: 'CineWay',
         debugShowCheckedModeBanner: false,
-        locale: Locale(appState.language),
+        locale: Locale(settings.language),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         theme: lightTheme,
@@ -124,18 +137,16 @@ class MainNavigator extends StatefulWidget {
 class _MainNavigatorState extends State<MainNavigator> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const MoviesScreen(),
-    const SearchScreen(),
-    const BookingsScreen(),
-    const ProfileScreen(),
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    MoviesScreen(),
+    SearchScreen(),
+    BookingsScreen(),
+    ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    setState(() => _selectedIndex = index);
   }
 
   @override

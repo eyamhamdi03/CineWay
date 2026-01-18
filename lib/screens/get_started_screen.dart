@@ -1,3 +1,4 @@
+import 'package:cineway/screens/signup_screen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../core/colors.dart';
@@ -134,7 +135,7 @@ class GetStartedScreen extends StatelessWidget {
                       // Navigate to Login or next onboarding step
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        MaterialPageRoute(builder: (_) => const SignupScreen()),
                       );
                     },
                     style: ElevatedButton.styleFrom(

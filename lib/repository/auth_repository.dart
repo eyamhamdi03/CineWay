@@ -2,51 +2,45 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthRepository {
-  static const String baseUrl = 'http://10.0.2.2:8000/api/v1';
+  static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
 
   /// Sign up a new user
   /// Returns user data on success, throws exception on failure
   Future<Map<String, dynamic>> signUp(String email, String password) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/auth/signup'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+        'full_name': 'New User', // or pass it as parameter
+      }),
+    );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        return data;
-      } else {
-        final error = jsonDecode(response.body);
-        throw Exception(error['detail'] ?? 'Sign up failed');
-      }
-    } catch (e) {
-      throw Exception('Sign up error: $e');
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(response.body);
     }
   }
 
-  /// Sign in with email and password
-  /// Returns access token and user data on success
   Future<Map<String, dynamic>> signIn(String email, String password) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/login'),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {
+        'username': email,
+        'password': password,
+      },
+    );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data;
-      } else {
-        final error = jsonDecode(response.body);
-        throw Exception(error['detail'] ?? 'Invalid credentials');
-      }
-    } catch (e) {
-      throw Exception('Sign in error: $e');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(response.body);
     }
   }
+
 
   /// Verify email token (for email verification)
   Future<bool> verifyEmail(String token) async {

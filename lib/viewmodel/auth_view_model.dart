@@ -1,55 +1,56 @@
 import 'package:flutter/material.dart';
-import '../services/app_state.dart';
 import '../repository/auth_repository.dart';
+import '../viewmodel/session/session_viewmodel.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
-  final AppState _appState;
+  final SessionViewModel _session;
 
   bool _isLoading = false;
   String? _errorMessage;
   bool _isPasswordVisible = false;
 
-  // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isPasswordVisible => _isPasswordVisible;
-  bool get isSignedIn => _appState.isSignedIn;
-  UserProfile? get user => _appState.user;
 
   AuthViewModel({
     required AuthRepository authRepository,
-    required AppState appState,
+    required SessionViewModel session,
   })  : _authRepository = authRepository,
-        _appState = appState;
+        _session = session;
 
-  /// Toggle password visibility
   void togglePasswordVisibility() {
     _isPasswordVisible = !_isPasswordVisible;
     notifyListeners();
   }
 
-  /// Clear error message
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
 
-  /// Sign up with email and password
-  /// Returns true on success, false on failure
+  /// Sign up (API)
   Future<bool> signUp(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      // Call API repository
       final result = await _authRepository.signUp(email, password);
 
-      // Update AppState with new user
-      _appState.signUpFromAPI(
+      // Your backend might return user object differently.
+      final userId = (result['id'] ?? result['user_id'] ?? '').toString();
+      final fullName = result['full_name']?.toString();
+
+      // Some APIs return token on signup, some don't.
+      final accessToken = result['access_token']?.toString();
+
+      await _session.signInFromAPI(
         email: email,
-        userId: result['id'] ?? result['user_id'] ?? '',
+        userId: userId.isEmpty ? 'u-${email.hashCode}' : userId,
+        fullName: fullName,
+        token: accessToken,
       );
 
       _isLoading = false;
@@ -63,26 +64,26 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  /// Sign in with email and password
-  /// Returns true on success, false on failure
+  /// Sign in (API)
   Future<bool> signIn(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      // Call API repository
       final result = await _authRepository.signIn(email, password);
 
-      // Extract token and user data
-      final accessToken = result['access_token'] ?? result['token'] ?? '';
-      final userId = result['id'] ?? result['user_id'] ?? 'u-${email.hashCode}';
+      final accessToken = (result['access_token'] ?? result['token'] ?? '').toString();
+      final userId = (result['id'] ?? result['user_id'] ?? 'u-${email.hashCode}').toString();
 
-      // Update AppState with logged-in user
-      _appState.signInFromAPI(
+      // Many backends don't send full_name on login
+      final fullName = result['full_name']?.toString();
+
+      await _session.signInFromAPI(
         email: email,
         userId: userId,
-        accessToken: accessToken,
+        fullName: fullName,
+        token: accessToken,
       );
 
       _isLoading = false;
@@ -102,28 +103,27 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _appState.signOut();
+      await _session.signOut();
       _isLoading = false;
       _errorMessage = null;
       notifyListeners();
-    } catch (e) {
+    } catch (_) {
       _errorMessage = 'Sign out failed';
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// Request password reset
   Future<bool> requestPasswordReset(String email) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final result = await _authRepository.requestPasswordReset(email);
+      final ok = await _authRepository.requestPasswordReset(email);
       _isLoading = false;
       notifyListeners();
-      return result;
+      return ok;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
@@ -132,41 +132,23 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  /// Validate email format
   static String? validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Please enter your email';
-    }
+    if (value == null || value.trim().isEmpty) return 'Please enter your email';
     final email = value.trim();
     final regex = RegExp(r"^[^@\s]+@[^@\s]+\.[^@\s]+$");
-    if (!regex.hasMatch(email)) {
-      return 'Please enter a valid email';
-    }
+    if (!regex.hasMatch(email)) return 'Please enter a valid email';
     return null;
   }
 
-  /// Validate password
   static String? validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your password';
-    }
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
+    if (value == null || value.isEmpty) return 'Please enter your password';
+    if (value.length < 6) return 'Password must be at least 6 characters';
     return null;
   }
 
-  /// Validate password confirmation
-  static String? validatePasswordConfirmation(
-    String? value,
-    String passwordValue,
-  ) {
-    if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
-    }
-    if (value != passwordValue) {
-      return 'Passwords do not match';
-    }
+  static String? validatePasswordConfirmation(String? value, String passwordValue) {
+    if (value == null || value.isEmpty) return 'Please confirm your password';
+    if (value != passwordValue) return 'Passwords do not match';
     return null;
   }
 }

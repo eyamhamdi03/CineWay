@@ -3,9 +3,10 @@ import 'dart:convert';
 
 import '../models/cinema.dart';
 import '../data/mock_cinemas.dart';
+import '../config/api_config.dart';
 
 class CinemaRepository {
-  final String baseUrl = "http://127.0.0.1:8000/api/v1";
+  final String baseUrl = ApiConfig.baseUrl;
 
   // Get all cinemas
   Future<List<Cinema>> getAllCinemas() async {

@@ -2,9 +2,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../models/screening.dart';
+import '../config/api_config.dart';
 
 class ScreeningRepository {
-  final String baseUrl = "http://localhost:8000/api/v1";
+  final String baseUrl = ApiConfig.baseUrl;
 
   // Get screenings (filter by cinema, movie or room)
   Future<List<Screening>> getScreenings({

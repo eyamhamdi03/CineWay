@@ -3,9 +3,10 @@ import 'dart:convert';
 
 import '../models/movie.dart';
 import '../data/mock_movies.dart';
+import '../config/api_config.dart';
 
 class MovieRepository {
-  final String baseUrl = "http://127.0.0.1:8000/api/v1";
+  final String baseUrl = ApiConfig.baseUrl;
 
   // Get all movies
   Future<List<Movie>> getAllMovies() async {

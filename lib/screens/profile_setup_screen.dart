@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../core/colors.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import '../services/app_state.dart';
-import 'package:cineway/l10n/app_localizations.dart';
+
+import '../core/colors.dart';
+import '../l10n/app_localizations.dart';
+import '../repository/user_repository.dart';
+import '../viewmodel/session/session_viewmodel.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   final dynamic user; // optional UserProfile for editing
@@ -32,21 +37,29 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   bool _newsletter = true;
   bool _pushNotifications = false;
+  bool _saving = false;
+
+  final _picker = ImagePicker();
+  XFile? _pickedImage;
 
   @override
   void initState() {
     super.initState();
-    // if user passed, prefill controllers
-    if (widget.user != null) {
+    // Prefill from session if available, or provided user
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final session = context.read<SessionViewModel>();
+      final u = session.user ?? widget.user;
       try {
-        final u = widget.user;
-        _nameController.text = u.fullName ?? '';
-        _emailController.text = u.email ?? '';
-        if (u.dob != null && u.dob is DateTime) _dob = u.dob as DateTime;
-        if (u.favoriteGenres is List) _selectedGenres.addAll(List<String>.from(u.favoriteGenres));
-        if (u.receiveNewsletter != null) _newsletter = u.receiveNewsletter as bool;
+        _nameController.text = (u?.fullName ?? '').toString();
+        _emailController.text = (u?.email ?? '').toString();
+        if (u?.dob != null && u!.dob is DateTime) _dob = u.dob as DateTime;
+        if (u?.favoriteGenres is List) {
+          _selectedGenres.addAll(List<String>.from(u!.favoriteGenres));
+        }
+        if (u?.receiveNewsletter != null) _newsletter = u!.receiveNewsletter == true;
       } catch (_) {}
-    }
+      setState(() {});
+    });
   }
 
   // simple email validation
@@ -106,27 +119,71 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     });
   }
 
-  void _completeProfile() {
+  Future<void> _pickImage() async {
+    final img = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (!mounted) return;
+    if (img != null) setState(() => _pickedImage = img);
+  }
+
+  Future<void> _completeProfile() async {
     if (!_formKey.currentState!.validate()) return;
+    setState(() => _saving = true);
 
-  // For now, just show a summary snackbar
-  final name = _nameController.text.trim();
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
 
-    // Save profile into AppState
-    final appState = Provider.of<AppState>(context, listen: false);
-    appState.completeProfile(
-      fullName: name,
-      dob: _dob,
-      avatarPath: null,
-      favoriteGenres: _selectedGenres.toList(),
-      newsletter: _newsletter,
-    );
+    final session = context.read<SessionViewModel>();
+    final token = session.accessToken;
+    final repo = UserRepository();
 
-    // If we opened this screen to edit an existing profile, pop back; otherwise go home
-    if (widget.user != null) {
-      Navigator.maybePop(context);
-    } else {
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    try {
+      if (token != null && token.isNotEmpty) {
+        // Update basic profile
+        await repo.updateMe(
+          token: token,
+          fullName: name.isEmpty ? null : name,
+          email: email.isEmpty ? null : email,
+          dateOfBirth: _dob,
+        );
+
+        // Update preferences (push notifications)
+        await repo.updatePreferences(
+          token: token,
+          notificationsEnabled: _pushNotifications,
+        );
+
+        // Upload profile picture if picked
+        if (_pickedImage != null) {
+          await repo.uploadProfilePicture(token: token, file: File(_pickedImage!.path));
+        }
+      }
+
+      // Persist minimal data locally in session
+      await session.completeProfile(
+        fullName: name,
+        dob: _dob,
+        avatarPath: _pickedImage?.path,
+        favoriteGenres: _selectedGenres.toList(),
+        newsletter: _newsletter,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated')),
+      );
+
+      if (widget.user != null) {
+        Navigator.maybePop(context);
+      } else {
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save profile: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -151,226 +208,305 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.maybePop(context),
         ),
-  title: Text(AppLocalizations.of(context)!.create_profile, style: TextStyle(fontWeight: FontWeight.w700, color: textColor)),
         centerTitle: true,
+        title: const Text('Profile Setup', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 6),
-              const Center(
-                child: SizedBox(height: 10),
-              ),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 180),
+              child: Column(
+                children: [
+                  // Progress
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _dot(width: 24, active: false),
+                      const SizedBox(width: 8),
+                      _dot(width: 48, active: true),
+                      const SizedBox(width: 8),
+                      _dot(width: 24, active: false),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Let's get you set up",
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Add your details to personalize your experience.',
+                    style: TextStyle(color: textColor.withOpacity(0.6)),
+                  ),
+                  const SizedBox(height: 22),
 
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  "Let's get your account personalized.",
-                  style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 16),
+                  // Avatar with add button
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 128,
+                          height: 128,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.15),
+                              width: 2,
+                              style: BorderStyle.solid,
+                            ),
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+                          child: ClipOval(
+                            child: _pickedImage != null
+                                ? Image.file(File(_pickedImage!.path), fit: BoxFit.cover)
+                                : Icon(Icons.person, size: 48, color: textColor.withOpacity(0.6)),
+                          ),
+                        ),
+                        Positioned(
+                          right: 6,
+                          bottom: 6,
+                          child: Material(
+                            color: AppColors.dodgerBlue,
+                            shape: const CircleBorder(),
+                            elevation: 4,
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: _pickImage,
+                              child: const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Icon(Icons.add_a_photo, color: Colors.white, size: 20),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 26),
+
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _label('Full Name'),
+                        _input(
+                          controller: _nameController,
+                          hint: 'e.g. Alex Doe',
+                          icon: Icons.badge_outlined,
+                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter your full name' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _label('Email Address'),
+                        _input(
+                          controller: _emailController,
+                          hint: 'alex.doe@cine.way',
+                          icon: Icons.mail_outline,
+                          validator: _validateEmail,
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 16),
+                        _label('Date of Birth'),
+                        GestureDetector(
+                          onTap: _pickDob,
+                          child: AbsorbPointer(
+                            child: _input(
+                              controller: TextEditingController(text: _formatDob()),
+                              hint: 'mm/dd/yyyy',
+                              icon: Icons.calendar_today_outlined,
+                              validator: (v) => (v == null || v.isEmpty) ? 'Select your date of birth' : null,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+                        _label('Favorite Genres'),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: _genres.map((g) {
+                            final selected = _selectedGenres.contains(g);
+                            return ChoiceChip(
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (selected) ...[
+                                    const Icon(Icons.check, size: 18),
+                                    const SizedBox(width: 4),
+                                  ],
+                                  Text(g),
+                                ],
+                              ),
+                              selected: selected,
+                              onSelected: (_) => _toggleGenre(g),
+                              labelStyle: TextStyle(
+                                color: selected ? Colors.white : textColor.withOpacity(0.8),
+                                fontWeight: FontWeight.w600,
+                              ),
+                              selectedColor: AppColors.dodgerBlue.withOpacity(0.9),
+                              backgroundColor: Theme.of(context).inputDecorationTheme.fillColor,
+                              shape: StadiumBorder(side: BorderSide(color: selected ? AppColors.dodgerBlue.withOpacity(0.5) : Colors.transparent)),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            );
+                          }).toList(),
+                        ),
+
+                        const SizedBox(height: 16),
+                        // Push notifications card
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).inputDecorationTheme.fillColor,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.notifications_active_outlined),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Push Notifications', style: TextStyle(fontWeight: FontWeight.w700)),
+                                    Text('Alerts for ticket availability', style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                              Switch(
+                                value: _pushNotifications,
+                                onChanged: (v) => setState(() => _pushNotifications = v),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Bottom gradient and actions
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Theme.of(context).scaffoldBackgroundColor,
+                    Theme.of(context).scaffoldBackgroundColor.withOpacity(0.85),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.6, 1.0],
                 ),
               ),
-
-              const SizedBox(height: 18),
-
-              // Avatar placeholder
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 110,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: colorScheme.surface.withOpacity(0.12), width: 2),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _saving ? null : _completeProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.dodgerBlue,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 6,
                       ),
-                      child: Center(
-                        child: Icon(Icons.camera_alt_outlined, size: 36, color: colorScheme.onSurface.withOpacity(0.7)),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // simple placeholder action: show dialog
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Upload Picture'),
-                              content: const Text('Image upload is not wired in this preview.'),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+                      child: _saving
+                          ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(AppLocalizations.of(context)!.complete_profile, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.arrow_forward),
                               ],
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.surface,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: Text('Upload Picture', style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w700)),
-                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: () => Navigator.maybePop(context),
+                    child: const Text('Skip for now'),
+                  ),
+                ],
               ),
-
-              const SizedBox(height: 18),
-
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Full Name', style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _nameController,
-                      style: TextStyle(color: textColor),
-                      decoration: InputDecoration(
-                        hintText: 'e.g. Alex Doe',
-                        hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
-                        filled: true,
-                        fillColor: Theme.of(context).inputDecorationTheme.fillColor,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                      ),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter your full name' : null,
-                    ),
-
-                    const SizedBox(height: 14),
-                    Text('Email', style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _emailController,
-                      style: TextStyle(color: textColor),
-                      decoration: InputDecoration(
-                        hintText: 'alex.doe@email.com',
-                        hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
-                        filled: true,
-                        fillColor: Theme.of(context).inputDecorationTheme.fillColor,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                      ),
-                      validator: _validateEmail,
-                    ),
-
-                    const SizedBox(height: 14),
-                    Text('Date of Birth', style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: _pickDob,
-                      child: AbsorbPointer(
-                        child: TextFormField(
-                          decoration: InputDecoration(
-                            hintText: 'mm/dd/yyyy',
-                            hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
-                            suffixIcon: Icon(Icons.calendar_today_outlined, color: textColor.withOpacity(0.6)),
-                            filled: true,
-                            fillColor: Theme.of(context).inputDecorationTheme.fillColor,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                          ),
-                          controller: TextEditingController(text: _formatDob()),
-                          validator: (v) => (v == null || v.isEmpty) ? 'Select your date of birth' : null,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 18),
-                    Text('Favorite Genres', style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: _genres.map((g) {
-                        final selected = _selectedGenres.contains(g);
-                        return FilterChip(
-                          label: Text(g, style: TextStyle(color: selected ? colorScheme.onPrimary : textColor.withOpacity(0.8))),
-                          selected: selected,
-                          onSelected: (_) => _toggleGenre(g),
-                          selectedColor: AppColors.dodgerBlue,
-                          backgroundColor: Theme.of(context).inputDecorationTheme.fillColor,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                        );
-                      }).toList(),
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    // Newsletter toggle
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(color: Theme.of(context).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(10)),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Receive newsletters', style: TextStyle(color: textColor)),
-                          Switch(
-                            value: _newsletter,
-                            thumbColor: MaterialStateProperty.all(colorScheme.primary),
-                            onChanged: (v) => setState(() => _newsletter = v),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(color: Theme.of(context).inputDecorationTheme.fillColor, borderRadius: BorderRadius.circular(10)),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Push notifications', style: TextStyle(color: textColor)),
-                          Switch(
-                            value: _pushNotifications,
-                            thumbColor: MaterialStateProperty.all(colorScheme.primary),
-                            onChanged: (v) => setState(() => _pushNotifications = v),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                          onPressed: _completeProfile,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colorScheme.primary,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Text(AppLocalizations.of(context)!.complete_profile, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                        ),
-                    ),
-
-                    const SizedBox(height: 12),
-                    Center(
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'Skip for now',
-                          style: TextStyle(color: colorScheme.primary),
-                          recognizer: TapGestureRecognizer()..onTap = () => Navigator.maybePop(context),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _label(String text) => Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: Text(text.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7))),
         ),
+      );
+
+  Widget _input({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    String? Function(String?)? validator,
+    TextInputType? keyboardType,
+  }) {
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      keyboardType: keyboardType,
+      style: const TextStyle(fontSize: 16),
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon),
+        hintText: hint,
+        filled: true,
+        fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide(color: Colors.white.withOpacity(0.06))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide(color: AppColors.dodgerBlue.withOpacity(0.5))),
+      ),
+    );
+  }
+
+  Widget _dot({required double width, required bool active}) {
+    return Container(
+      height: 6,
+      width: width,
+      decoration: BoxDecoration(
+        color: active ? AppColors.dodgerBlue : Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(3),
+        boxShadow: active
+            ? [
+                BoxShadow(
+                  color: AppColors.dodgerBlue.withOpacity(0.35),
+                  blurRadius: 18,
+                  spreadRadius: 0,
+                )
+              ]
+            : null,
       ),
     );
   }

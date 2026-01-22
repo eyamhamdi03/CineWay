@@ -14,19 +14,23 @@ class SelectSeatsScreen extends StatefulWidget {
   State<SelectSeatsScreen> createState() => _SelectSeatsScreenState();
 }
 
-class _SelectSeatsScreenState extends State<SelectSeatsScreen> {
+class _SelectSeatsScreenState extends State<SelectSeatsScreen> with SingleTickerProviderStateMixin {
   // Rows A - G
   final List<String> _rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
   final int _cols = 10;
 
   // occupied seats (sample)
   final Set<String> _occupied = {
-    'A3', 'B5', 'C7', 'D2', 'F6', 'G9'
+    'G4', 'G5', 'F5', 'F6', 'E2', 'E3', 'D6', 'D7', 'C1', 'C2'
   };
 
-  final Set<String> _selected = {};
+  final Set<String> _selected = {'E4', 'E5', 'E6'};
   final double _seatPrice = 12.00;
   final int _maxSelectable = 6;
+
+  AnimationController? _glowController;
+  Animation<double>? _glow;
+
 
   String _seatKey(int r, int c) => '${_rows[r]}${c + 1}';
 
@@ -49,10 +53,10 @@ class _SelectSeatsScreenState extends State<SelectSeatsScreen> {
     list.sort((a, b) {
       final ra = a.codeUnitAt(0);
       final rb = b.codeUnitAt(0);
-      if (ra != rb) return ra - rb;
+      if (ra != rb) return ra.compareTo(rb);
       final ca = int.parse(a.substring(1));
       final cb = int.parse(b.substring(1));
-      return ca - cb;
+      return ca.compareTo(cb);
     });
     return list;
   }
@@ -64,12 +68,21 @@ class _SelectSeatsScreenState extends State<SelectSeatsScreen> {
     }
     final seats = _sortedSelected();
     final movieTitle = widget.movieTitle ?? (mockMovies.isNotEmpty ? mockMovies[0].title : 'Movie');
-    final totalAmount = (_selected.length * _seatPrice);
+    final totalAmount = (_selected.length * _seatPrice).toDouble();
     final cinema = widget.cinema ?? 'CineWay Plex';
     final dateTime = widget.dateTime ?? 'Today • 7:30 PM';
+
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => PaymentScreen(seats: seats, amount: totalAmount, movieTitle: movieTitle, cinema: cinema, dateTime: dateTime)),
+      MaterialPageRoute(
+        builder: (_) => PaymentScreen(
+          movieTitle: movieTitle,
+          cinema: cinema,
+          dateTime: dateTime,
+          seats: seats,
+          amount: totalAmount,
+        ),
+      ),
     );
   }
 
@@ -77,151 +90,258 @@ class _SelectSeatsScreenState extends State<SelectSeatsScreen> {
     final selected = _selected.contains(id);
     final occupied = _occupied.contains(id);
     Color color;
-    if (occupied) color = const Color(0xFF2A2E31);
-    else if (selected) color = AppColors.dodgerBlue;
-    else color = const Color(0xFF1B2024);
+    if (occupied) color = const Color(0xFF252525);
+    else if (selected) color = const Color(0xFF00BFFF);
+    else color = const Color(0xFF3A3A3C);
 
     return GestureDetector(
       onTap: () => _toggleSeat(id),
       child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6)),
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF00BFFF).withOpacity(0.5),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  )
+                ]
+              : null,
+        ),
+        child: occupied ? const Icon(Icons.lock, size: 12, color: Colors.white30) : null,
       ),
     );
   }
 
   @override
+  void initState() {
+    super.initState();
+    _glowController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+    _glow = CurvedAnimation(parent: _glowController!, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _glowController?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-  final movieTitle = widget.movieTitle ?? (mockMovies.isNotEmpty ? mockMovies[0].title : 'Movie');
+    final movieTitle = widget.movieTitle ?? (mockMovies.isNotEmpty ? mockMovies[0].title : 'Movie');
     final selectedList = _sortedSelected();
     final total = (_selected.length * _seatPrice);
 
     return Scaffold(
-      backgroundColor: AppColors.mirage,
+      backgroundColor: const Color(0xFF0F0F0F),
       appBar: AppBar(
-        backgroundColor: AppColors.mirage,
+        backgroundColor: const Color(0xFF0F0F0F).withOpacity(0.95),
         elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.maybePop(context)),
-        centerTitle: true,
-        title: const Text('SelectSeats', style: TextStyle(fontWeight: FontWeight.w700)),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(22),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Text(movieTitle, style: const TextStyle(color: AppColors.jumbo)),
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.maybePop(context),
         ),
+        centerTitle: true,
+        title: const Text('Select Seats', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () {},
+          ),
+        ],
       ),
-      body: SafeArea(
+      body: SingleChildScrollView(
         child: Column(
           children: [
             const SizedBox(height: 12),
-            // Screen graphic
+            // Movie and showtime info block
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(height: 12, decoration: BoxDecoration(color: AppColors.dodgerBlue, borderRadius: BorderRadius.circular(8), boxShadow: [BoxShadow(color: AppColors.dodgerBlue.withOpacity(0.35), blurRadius: 14, spreadRadius: 2)])),
-                  const SizedBox(height: 8),
-                  const Text('SCREEN', style: TextStyle(color: AppColors.jumbo)),
+                  Text(
+                    movieTitle,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.cinema ?? 'Selected Cinema',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF8E8E93)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.dateTime ?? 'Selected Showtime',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF8E8E93)),
+                  ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 24),
 
-            // Seat grid with row labels
-            Expanded(
+            // Cinema screen with cyan glow
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  AnimatedBuilder(
+                    animation: _glow ?? kAlwaysCompleteAnimation,
+                    builder: (_, __) => CustomPaint(
+                      painter: CinemaScreenPainter(glow: 0.6 + 0.4 * ((_glow?.value) ?? 1.0)),
+                      size: const Size(double.infinity, 42),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'CINEMA SCREEN',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[500],
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 50),
+
+            // Seat grid centered with horizontal scroll to avoid overflow
+            Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: Column(
-                  children: List.generate(_rows.length, (r) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          SizedBox(width: 20, child: Text(_rows[_rows.length - 1 - r], style: const TextStyle(color: AppColors.jumbo))),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: List.generate(_cols, (c) {
-                                // render rows in normal order A bottom -> G top, we invert index above
-                                final rowIndex = _rows.length - 1 - r;
-                                final id = _seatKey(rowIndex, c);
-                                return Padding(padding: const EdgeInsets.symmetric(horizontal: 6.0), child: _buildSeat(id));
-                              }),
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 360),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(_rows.length, (r) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              child: Text(
+                                _rows[r],
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF8E8E93)),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          SizedBox(width: 20, child: Text(_rows[_rows.length - 1 - r], style: const TextStyle(color: AppColors.jumbo))),
-                        ],
-                      ),
-                    );
-                  }),
+                            const SizedBox(width: 10),
+                            ...List.generate(_cols, (c) {
+                              final id = _seatKey(r, c);
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+                                child: _buildSeat(id),
+                              );
+                            }),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 20,
+                              child: Text(
+                                _rows[r],
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF8E8E93)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 20.0),
+
             // Legend
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0),
+              padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Row(children: [Container(width: 18, height: 18, decoration: BoxDecoration(color: AppColors.dodgerBlue, borderRadius: BorderRadius.circular(4))), const SizedBox(width: 8), const Text('Selected', style: TextStyle(color: AppColors.jumbo))]),
-                  Row(children: [Container(width: 18, height: 18, decoration: BoxDecoration(color: const Color(0xFF1B2024), borderRadius: BorderRadius.circular(4))), const SizedBox(width: 8), const Text('Available', style: TextStyle(color: AppColors.jumbo))]),
-                  Row(children: [Container(width: 18, height: 18, decoration: BoxDecoration(color: const Color(0xFF2A2E31), borderRadius: BorderRadius.circular(4))), const SizedBox(width: 8), const Text('Occupied', style: TextStyle(color: AppColors.jumbo))]),
+                  _legendItem('Selected', const Color(0xFF00BFFF)),
+                  _legendItem('Available', const Color(0xFF3A3A3C)),
+                  _legendItem('Reserved', const Color(0xFF252525)),
                 ],
               ),
             ),
 
-            const SizedBox(height: 18),
-
-            // Bottom summary card and CTA
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(color: const Color(0xFF1F2629), borderRadius: BorderRadius.circular(12)),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Tickets(${_selected.length})', style: const TextStyle(color: AppColors.jumbo)),
-                            const SizedBox(height: 6),
-                            Text(selectedList.isNotEmpty ? selectedList.join(', ') : 'None', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const Text('TotalPrice', style: TextStyle(color: AppColors.jumbo)),
-                            const SizedBox(height: 6),
-                            Text('\$${total.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
-                          ],
-                        ),
-                      ],
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+      bottomSheet: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F0F0F).withOpacity(0.95),
+          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Price',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[500], fontWeight: FontWeight.w500),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _proceed,
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.dodgerBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                      child: Text('Proceed to Payment', style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text(
+                      '\$ ${total.toStringAsFixed(2)}',
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${_selected.length} Tickets',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500], fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      selectedList.join(', '),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF00BFFF)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _proceed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00BFFF),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 4,
+                ),
+                child: const Text(
+                  'Buy Tickets',
+                  style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -229,4 +349,63 @@ class _SelectSeatsScreenState extends State<SelectSeatsScreen> {
       ),
     );
   }
+
+  Widget _legendItem(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+            boxShadow: label == 'Selected'
+                ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.5),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    )
+                  ]
+                : null,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 13, color: Color(0xFF8E8E93), fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+}
+
+class CinemaScreenPainter extends CustomPainter {
+  final double glow;
+  CinemaScreenPainter({this.glow = 1});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..moveTo(10, size.height - 5)
+      ..quadraticBezierTo(size.width / 2, 5, size.width - 10, size.height - 5);
+
+    final glowPaint = Paint()
+      ..color = const Color(0xFF00BFFF).withOpacity(0.25 * glow)
+      ..strokeWidth = 14 + 3 * glow
+      ..style = PaintingStyle.stroke
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    final linePaint = Paint()
+      ..color = const Color(0xFF00BFFF)
+      ..strokeWidth = 6
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawPath(path, glowPaint);
+    canvas.drawPath(path, linePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CinemaScreenPainter oldDelegate) => oldDelegate.glow != glow;
 }

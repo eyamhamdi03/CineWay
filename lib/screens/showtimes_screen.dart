@@ -1,50 +1,66 @@
 import 'package:flutter/material.dart';
 import '../core/colors.dart';
+import '../models/movie.dart';
+import '../repository/movie_repository.dart';
 import 'select_seats_screen.dart';
 
 class ShowtimesScreen extends StatefulWidget {
   final String? movieTitle;
-
   const ShowtimesScreen({super.key, this.movieTitle});
-
   @override
   State<ShowtimesScreen> createState() => _ShowtimesScreenState();
 }
 
 class _ShowtimesScreenState extends State<ShowtimesScreen> {
   int _selectedDateIndex = 0;
-  bool _filterByTime = true; // true=Time, false=Cinema
+  Movie? _movie;
+  bool _loadingMovie = false;
 
-  // sample data
-  final List<String> _dates = ['Today, Aug 15', 'Tomorrow, Aug 16', 'Fri, Aug 17'];
+  final List<String> _dates = const ['Aug 15', 'Aug 16', 'Aug 17', 'Aug 18', 'Aug 19'];
 
-  final List<Map<String, dynamic>> _cinemas = [
+  final List<Map<String, dynamic>> _cinemas = const [
     {
       'name': 'Cineplex Downtown',
-      'distance': '2.5 km away',
+      'distance': '2.5 km',
       'times': ['18:45', '19:30', '20:15', '21:00']
     },
     {
       'name': 'Grand Millennium',
-      'distance': '4.1km away',
+      'distance': '4.1 km',
       'times': ['19:00 IMAX', '19:45', '21:30 IMAX', '22:00']
     },
     {
       'name': 'Starlight Cinemas',
-      'distance': '6.8 km away',
+      'distance': '6.8 km',
       'times': ['17:30', '19:15', '20:45 3D']
     },
   ];
 
-  // track selected time per cinema index
   final Map<int, String> _selectedTimes = {};
 
-  void _toggleFilter(bool byTime) => setState(() => _filterByTime = byTime);
+  @override
+  void initState() {
+    super.initState();
+    _fetchMovie();
+  }
+
+  Future<void> _fetchMovie() async {
+    final title = widget.movieTitle?.trim();
+    if (title == null || title.isEmpty) return;
+    setState(() => _loadingMovie = true);
+    try {
+      final repo = MovieRepository();
+      final results = await repo.searchMovies(title);
+      if (results.isNotEmpty) setState(() => _movie = results.first);
+    } catch (_) {
+      // ignore errors, keep placeholder
+    } finally {
+      if (mounted) setState(() => _loadingMovie = false);
+    }
+  }
 
   void _selectTime(int cinemaIndex, String time) {
-    setState(() {
-      _selectedTimes[cinemaIndex] = time;
-    });
+    setState(() => _selectedTimes[cinemaIndex] = time);
   }
 
   void _continue() {
@@ -52,46 +68,79 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a showtime')));
       return;
     }
-    // navigate to seat selection for the first selected showtime
-    final firstEntry = _selectedTimes.entries.first;
-    final cinema = _cinemas[firstEntry.key]['name'] as String;
-    final time = firstEntry.value as String;
+    final entry = _selectedTimes.entries.first;
+    final cinema = _cinemas[entry.key]['name'] as String;
+    final time = entry.value;
+    final date = _dates[_selectedDateIndex];
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => SelectSeatsScreen(movieTitle: widget.movieTitle, cinema: cinema, dateTime: time),
+        builder: (_) => SelectSeatsScreen(movieTitle: widget.movieTitle, cinema: cinema, dateTime: '$date • $time'),
       ),
     );
   }
 
-  Widget _buildHeaderCard(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  Widget _buildHeaderCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFF19232D),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Container(
+            width: 80,
+            height: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.black,
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 8, offset: const Offset(0, 4))],
+            ),
+            child: Stack(
               children: [
-                Text(widget.movieTitle ?? 'Movie', style: TextStyle(color: cs.onSurface, fontSize: 18, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 6),
-                Text('2h 25m | PG-13 | Action, Sci-Fi', style: TextStyle(color: AppColors.jumbo)),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: (_movie?.bannerUrl.isNotEmpty == true && !_loadingMovie)
+                      ? Image.network(_movie!.bannerUrl, fit: BoxFit.cover, width: 80, height: 120)
+                      : Container(color: Colors.grey.shade800, child: const Center(child: Icon(Icons.movie, size: 40, color: Colors.white70))),
+                ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white.withOpacity(0.9), width: 2),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          Container(
-            width: 72,
-            height: 48,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: cs.onSurface.withOpacity(0.06)),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
-              child: Icon(Icons.movie, color: cs.onSurface, size: 36),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Text('Planet of the Apes', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                SizedBox(height: 6),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    Text('2h 25m', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w600)),
+                    _Dot(),
+                    Text('PG-13', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w600)),
+                    _Dot(),
+                    Text('Action', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -99,23 +148,33 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
     );
   }
 
-  Widget _dateChips(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  Widget _dateChips() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: List.generate(_dates.length, (i) {
           final selected = i == _selectedDateIndex;
-          return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: ChoiceChip(
-              label: Text(_dates[i], style: TextStyle(color: selected ? cs.onPrimary : cs.onSurface.withOpacity(0.85))),
-              selected: selected,
-              onSelected: (_) => setState(() => _selectedDateIndex = i),
-              selectedColor: cs.primary,
-              backgroundColor: cs.surfaceVariant,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+          return GestureDetector(
+            onTap: () => setState(() => _selectedDateIndex = i),
+            child: Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: selected ? AppColors.dodgerBlue : const Color(0xFF19232D),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white.withOpacity(0.06)),
+                boxShadow: selected ? [BoxShadow(color: AppColors.dodgerBlue.withOpacity(0.25), blurRadius: 16, spreadRadius: 1)] : null,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(_dates[i].split(' ')[0], style: TextStyle(fontSize: 11, fontWeight: selected ? FontWeight.bold : FontWeight.w600, color: selected ? Colors.blue.shade50 : const Color(0xFF94A3B8))),
+                  const SizedBox(height: 2),
+                  Text(_dates[i].split(' ')[1], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                ],
+              ),
             ),
           );
         }),
@@ -123,28 +182,39 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
     );
   }
 
-  Widget _filterRow(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  Widget _filterRow() {
     return Row(
       children: [
         Expanded(
-          child: GestureDetector(
-            onTap: () => _toggleFilter(true),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(color: _filterByTime ? cs.primary : cs.surfaceVariant, borderRadius: BorderRadius.circular(10)),
-              child: Center(child: Text('Time', style: TextStyle(fontWeight: FontWeight.w600, color: _filterByTime ? cs.onPrimary : cs.onSurface))),
+          child: Container(
+            height: 44,
+            decoration: BoxDecoration(color: const Color(0xFF19232D), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white.withOpacity(0.06))),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.schedule, size: 20, color: AppColors.dodgerBlue),
+                SizedBox(width: 8),
+                Text('By Time', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                SizedBox(width: 4),
+                Icon(Icons.expand_more, size: 18, color: Colors.grey),
+              ],
             ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: GestureDetector(
-            onTap: () => _toggleFilter(false),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(color: !_filterByTime ? cs.primary : cs.surfaceVariant, borderRadius: BorderRadius.circular(10)),
-              child: Center(child: Text('Cinema', style: TextStyle(fontWeight: FontWeight.w600, color: !_filterByTime ? cs.onPrimary : cs.onSurface))),
+          child: Container(
+            height: 44,
+            decoration: BoxDecoration(color: const Color(0xFF19232D), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white.withOpacity(0.06))),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.location_on, size: 20, color: AppColors.dodgerBlue),
+                SizedBox(width: 8),
+                Text('By Cinema', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                SizedBox(width: 4),
+                Icon(Icons.expand_more, size: 18, color: Colors.grey),
+              ],
             ),
           ),
         ),
@@ -152,40 +222,50 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
     );
   }
 
-  Widget _cinemaSection(BuildContext context, int index, Map<String, dynamic> cinema) {
-    final cs = Theme.of(context).colorScheme;
+  Widget _cinemaSection(int index, Map<String, dynamic> cinema) {
     final times = (cinema['times'] as List<String>);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
-        Text(cinema['name'], style: TextStyle(color: cs.onSurface, fontSize: 18, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 4),
-        Text(cinema['distance'], style: TextStyle(color: AppColors.jumbo)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(cinema['name'] as String, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(cinema['distance'] as String, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8))),
+          ],
+        ),
+        const SizedBox(height: 10),
+        GridView.count(
+          crossAxisCount: 4,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           children: times.map((t) {
             final selected = _selectedTimes[index] == t;
-            // show small tag if contains IMAX or 3D
             final parts = t.split(' ');
             final main = parts[0];
             final tag = parts.length > 1 ? parts[1] : null;
             return GestureDetector(
               onTap: () => _selectTime(index, t),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                height: 48,
                 decoration: BoxDecoration(
-                  color: selected ? cs.primary : cs.surfaceVariant,
-                  borderRadius: BorderRadius.circular(10),
+                  color: selected ? AppColors.dodgerBlue : const Color(0xFF19232D),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
+                  boxShadow: selected ? [BoxShadow(color: AppColors.dodgerBlue.withOpacity(0.25), blurRadius: 16, spreadRadius: 1)] : null,
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(main, style: TextStyle(color: selected ? cs.onPrimary : cs.onSurface, fontWeight: FontWeight.w700)),
-                    if (tag != null) const SizedBox(height: 4),
-                    if (tag != null) Text(tag, style: TextStyle(color: selected ? cs.onPrimary : AppColors.dodgerBlue, fontSize: 12, fontWeight: FontWeight.w700)),
+                    Text(main, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: selected ? Colors.white : Colors.white)),
+                    if (tag != null) const SizedBox(height: 2),
+                    if (tag != null)
+                      const SizedBox.shrink(),
+                    if (tag != null)
+                      Text(tag!, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.dodgerBlue)),
                   ],
                 ),
               ),
@@ -198,50 +278,67 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        backgroundColor: const Color(0xFF101922).withOpacity(0.95),
         elevation: 0,
-        leading: IconButton(icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor), onPressed: () => Navigator.maybePop(context)),
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.maybePop(context)),
         centerTitle: true,
-        title: Text('Showtimes', style: TextStyle(fontWeight: FontWeight.w700, color: Theme.of(context).appBarTheme.foregroundColor)),
+        title: const Text('Showtimes', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          child: Column(
-            children: [
-              _buildHeaderCard(context),
-              const SizedBox(height: 14),
-              _dateChips(context),
-              const SizedBox(height: 12),
-              _filterRow(context),
-              const SizedBox(height: 12),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: List.generate(_cinemas.length, (i) => _cinemaSection(context, i, _cinemas[i])),
-                  ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                children: [
+                  _buildHeaderCard(),
+                  const SizedBox(height: 14),
+                  _dateChips(),
+                  const SizedBox(height: 12),
+                  _filterRow(),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(_cinemas.length, (i) => _cinemaSection(i, _cinemas[i])),
                 ),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _continue,
-                  style: ElevatedButton.styleFrom(backgroundColor: cs.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
-                  child: Text('Continue', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: cs.onPrimary)),
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
+            ),
+          ],
+        ),
+      ),
+      bottomSheet: Container(
+        color: Colors.transparent,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+        child: SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: _continue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.dodgerBlue,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 4,
+            ),
+            child: const Text('Select Seats', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ),
       ),
     );
+  }
+}
+
+class _Dot extends StatelessWidget {
+  const _Dot();
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 4, height: 4, decoration: const BoxDecoration(color: Color(0xFF64748B), shape: BoxShape.circle));
   }
 }

@@ -13,6 +13,7 @@ class Movie {
   final String rating;
   final List<Cast> cast;
   final List<Review> reviews;
+  final int? voteCount;
 
   Movie({
     required this.id,
@@ -26,6 +27,7 @@ class Movie {
     required this.rating,
     required this.cast,
     required this.reviews,
+    this.voteCount,
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
@@ -46,6 +48,7 @@ class Movie {
         return Cast(name: c.toString(), imageUrl: "");
       }).toList(),
       reviews: [],
+      voteCount: json["vote_count"],
     );
   }
 
@@ -62,6 +65,7 @@ class Movie {
       "rating": rating,
       "cast": cast,
       "reviews": reviews.map((r) => r.toJson()).toList(),
+      "voteCount": voteCount,
     };
   }
 }

@@ -11,16 +11,29 @@ class CinemaRepository {
   // Get all cinemas
   Future<List<Cinema>> getAllCinemas() async {
     final response = await http.get(Uri.parse("$baseUrl/cinemas"));
-     final data = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      final List list = data as List;
-
-      return list.map((json) => Cinema.fromJson(json)).toList();
-    } else {
+    if (response.statusCode != 200) {
       throw Exception('Failed to search cinemas: ${response.statusCode}');
     }
+
+    final decoded = jsonDecode(response.body);
+
+    // API may return a raw list or wrap it in a map like {"data": [...]} or {"cinemas": [...]}
+    List<dynamic>? list;
+    if (decoded is List) {
+      list = decoded;
+    } else if (decoded is Map) {
+      if (decoded['data'] is List) {
+        list = decoded['data'] as List;
+      } else if (decoded['cinemas'] is List) {
+        list = decoded['cinemas'] as List;
+      }
+    }
+
+    if (list == null) {
+      throw Exception('Unexpected cinemas response shape');
+    }
+
+    return list.map((json) => Cinema.fromJson(json as Map<String, dynamic>)).toList();
   }
 
 

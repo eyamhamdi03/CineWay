@@ -7,7 +7,7 @@ import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/search_screen.dart';
-import 'screens/movies_screen.dart';
+import 'screens/cinemas_screen.dart';
 import 'screens/profile_setup_screen.dart';
 import 'screens/bookings_screen.dart';
 import 'screens/profile_screen.dart';
@@ -34,37 +34,21 @@ void main() {
     MultiProvider(
       providers: [
         Provider<LocalStorage>.value(value: storage),
-
-        // Settings (theme + language)
-        ChangeNotifierProvider(
-          create: (_) => SettingsViewModel(storage)..load(),
-        ),
-
-        // Session (user + token)
-        ChangeNotifierProvider(
-          create: (_) => SessionViewModel(storage)..load(),
-        ),
-
-        // Bookings
-        ChangeNotifierProvider(
-          create: (_) => BookingsViewModel(storage)..load(),
-        ),
-
-        // Auth VM uses Session VM (not AppState anymore)
+        ChangeNotifierProvider(create: (_) => SettingsViewModel(storage)..load()),
+        ChangeNotifierProvider(create: (_) => SessionViewModel(storage)..load()),
+        ChangeNotifierProvider(create: (_) => BookingsViewModel(storage)..load()),
         ChangeNotifierProvider(
           create: (context) => AuthViewModel(
             authRepository: AuthRepository(),
             session: context.read<SessionViewModel>(),
           ),
         ),
-
         ChangeNotifierProvider(
           create: (_) => SearchViewModel(
             movieRepo: MovieRepository(),
             cinemaRepo: CinemaRepository(),
           ),
         ),
-
         ChangeNotifierProvider(
           create: (_) => MovieDetailViewModel(MovieRepository()),
         ),
@@ -80,47 +64,24 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<SettingsViewModel>(builder: (context, settings, _) {
-      final isDark = settings.isDark;
-
-      final lightTheme = ThemeData(
-        brightness: Brightness.light,
-        primaryColor: AppColors.dodgerBlue,
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-        ),
-      );
-
-      final darkTheme = ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: AppColors.dodgerBlue,
-        scaffoldBackgroundColor: AppColors.mirage,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.mirage,
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-      );
-
       return MaterialApp(
         title: 'CineWay',
         debugShowCheckedModeBanner: false,
         locale: Locale(settings.language),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        theme: lightTheme,
-        darkTheme: darkTheme,
-        themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+        themeMode: settings.isDark ? ThemeMode.dark : ThemeMode.light,
+        theme: ThemeData.light(),
+        darkTheme: ThemeData.dark(),
         initialRoute: '/get_started',
         routes: {
-          '/get_started': (ctx) => const GetStartedScreen(),
-          '/login': (ctx) => const LoginScreen(),
-          '/profile_setup': (ctx) => const ProfileSetupScreen(),
-          '/home': (ctx) => const MainNavigator(),
-          '/bookings': (ctx) => const BookingsScreen(),
-          '/booking_confirmation': (ctx) => const BookingConfirmationScreen(),
+          '/get_started': (_) => const GetStartedScreen(),
+          '/login': (_) => const LoginScreen(),
+          '/profile_setup': (_) => const ProfileSetupScreen(),
+          '/home': (_) => const MainNavigator(),
+          '/bookings': (_) => const BookingsScreen(),
+          '/booking_confirmation': (_) =>
+              const BookingConfirmationScreen(),
         },
       );
     });
@@ -134,16 +95,45 @@ class MainNavigator extends StatefulWidget {
   State<MainNavigator> createState() => _MainNavigatorState();
 }
 
-class _MainNavigatorState extends State<MainNavigator> {
+class _MainNavigatorState extends State<MainNavigator>
+    with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
+
+  late final AnimationController _fabController;
+  late final Animation<double> _scaleAnim;
 
   final List<Widget> _screens = const [
     HomeScreen(),
-    MoviesScreen(),
+    CinemasScreen(),
     SearchScreen(),
     BookingsScreen(),
     ProfileScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _fabController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+
+    _scaleAnim = Tween<double>(begin: 1.0, end: 1.06).animate(
+      CurvedAnimation(
+        parent: _fabController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _fabController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _fabController.dispose();
+    super.dispose();
+  }
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
@@ -151,21 +141,115 @@ class _MainNavigatorState extends State<MainNavigator> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final showLabels = MediaQuery.of(context).size.width > 360;
 
     return Scaffold(
       body: _screens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: [
-          BottomNavigationBarItem(icon: const Icon(Icons.home), label: loc.home),
-          BottomNavigationBarItem(icon: const Icon(Icons.movie), label: loc.movies),
-          BottomNavigationBarItem(icon: const Icon(Icons.search), label: loc.search),
-          BottomNavigationBarItem(icon: const Icon(Icons.bookmark), label: loc.bookings),
-          BottomNavigationBarItem(icon: const Icon(Icons.person), label: loc.profile),
-        ],
+
+      /// 🔵 Animated glowing search FAB (SAFE)
+      floatingActionButton: Transform.translate(
+        offset: const Offset(0, 16),
+        child: ScaleTransition(
+          scale: _scaleAnim,
+          child: Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF4FC3F7).withOpacity(0.5),
+                  blurRadius: 22,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: FloatingActionButton(
+              onPressed: () => _onItemTapped(2),
+              backgroundColor: const Color(0xFF4FC3F7),
+              elevation: 0,
+              shape: const CircleBorder(),
+              child: const Icon(
+                Icons.search,
+                size: 28,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
+      bottomNavigationBar: BottomAppBar(
+        color: const Color(0xFF1A1A1A),
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 10,
+        height: 64 + bottomInset,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            child: Row(
+              children: [
+                _buildNavItem(Icons.home_outlined, Icons.home, 'Home', 0, showLabels),
+                _buildNavItem(Icons.theaters_outlined, Icons.theaters, 'Cinemas', 1, showLabels),
+                const SizedBox(width: 56),
+                _buildNavItem(Icons.confirmation_number_outlined,
+                    Icons.confirmation_number, 'Tickets', 3, showLabels),
+                _buildNavItem(Icons.person_outline, Icons.person, 'Profile', 4, showLabels),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+    IconData icon,
+    IconData selectedIcon,
+    String label,
+    int index,
+    bool showLabel,
+  ) {
+    final isSelected = _selectedIndex == index;
+
+    return Expanded(
+      child: InkWell(
+        onTap: () => _onItemTapped(index),
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? selectedIcon : icon,
+              size: 24,
+              color: isSelected
+                  ? const Color(0xFF4FC3F7)
+                  : const Color(0xFF7A7A7A),
+            ),
+            if (showLabel)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    height: 1.1,
+                    color: isSelected
+                        ? const Color(0xFF4FC3F7)
+                        : const Color(0xFF7A7A7A),
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

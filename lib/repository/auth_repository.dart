@@ -54,6 +54,26 @@ class AuthRepository {
     }
   }
 
+  Future<Map<String, dynamic>> fetchCurrentUser(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/auth/me'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['detail'] ?? 'Failed to fetch profile');
+      }
+    } catch (e) {
+      throw Exception('Fetch profile error: $e');
+    }
+  }
+
 
   /// Verify email token (for email verification)
   Future<bool> verifyEmail(String token) async {

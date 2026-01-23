@@ -12,7 +12,8 @@ import '../viewmodel/session/session_viewmodel.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   final dynamic user; // optional UserProfile for editing
-  const ProfileSetupScreen({super.key, this.user});
+  final bool isInitialSetup; // true when coming from signup, false when editing
+  const ProfileSetupScreen({super.key, this.user, this.isInitialSetup = false});
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -136,26 +137,32 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     final token = session.accessToken;
     final repo = UserRepository();
 
+    if (token == null || token.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You must be signed in to update your profile.')),
+      );
+      setState(() => _saving = false);
+      return;
+    }
+
     try {
-      if (token != null && token.isNotEmpty) {
-        // Update basic profile
-        await repo.updateMe(
-          token: token,
-          fullName: name.isEmpty ? null : name,
-          email: email.isEmpty ? null : email,
-          dateOfBirth: _dob,
-        );
+      // Update basic profile
+      await repo.updateMe(
+        token: token,
+        fullName: name.isEmpty ? null : name,
+        email: email.isEmpty ? null : email,
+        dateOfBirth: _dob,
+      );
 
-        // Update preferences (push notifications)
-        await repo.updatePreferences(
-          token: token,
-          notificationsEnabled: _pushNotifications,
-        );
+      // Update preferences (push notifications)
+      await repo.updatePreferences(
+        token: token,
+        notificationsEnabled: _pushNotifications,
+      );
 
-        // Upload profile picture if picked
-        if (_pickedImage != null) {
-          await repo.uploadProfilePicture(token: token, file: File(_pickedImage!.path));
-        }
+      // Upload profile picture if picked
+      if (_pickedImage != null) {
+        await repo.uploadProfilePicture(token: token, file: File(_pickedImage!.path));
       }
 
       // Persist minimal data locally in session
@@ -172,12 +179,26 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         const SnackBar(content: Text('Profile updated')),
       );
 
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/home',
-        (route) => false,
-        arguments: 4,
-      );
+      // Check if we're in edit mode
+      final isEditMode = !widget.isInitialSetup;
+      
+      if (isEditMode) {
+        // Go back to profile screen
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/home',
+          (route) => false,
+          arguments: 4, // Profile tab
+        );
+      } else {
+        // Go to home after initial setup
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/home',
+          (route) => false,
+          arguments: 0, // Home tab
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -199,6 +220,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textColor = colorScheme.onSurface;
+    final isEditMode = !widget.isInitialSetup;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -210,7 +232,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           onPressed: () => Navigator.maybePop(context),
         ),
         centerTitle: true,
-        title: const Text('Profile Setup', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          isEditMode ? 'Edit Profile' : 'Profile Setup',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: Stack(
         children: [
@@ -233,12 +258,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "Let's get you set up",
+                    isEditMode ? "Update Your Profile" : "Let's get you set up",
                     style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Add your details to personalize your experience.',
+                    isEditMode
+                        ? 'Update your details and preferences.'
+                        : 'Add your details to personalize your experience.',
                     style: TextStyle(color: textColor.withOpacity(0.6)),
                   ),
                   const SizedBox(height: 22),
@@ -438,18 +465,23 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(AppLocalizations.of(context)!.complete_profile, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                Text(
+                                  isEditMode ? 'Save Changes' : 'Complete Setup',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
                                 const SizedBox(width: 8),
                                 const Icon(Icons.arrow_forward),
                               ],
                             ),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: () => Navigator.maybePop(context),
-                    child: const Text('Skip for now'),
-                  ),
+                  if (!isEditMode) ...[
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () => Navigator.maybePop(context),
+                      child: const Text('Skip for now'),
+                    ),
+                  ],
                 ],
               ),
             ),

@@ -12,6 +12,7 @@ class SessionViewModel extends ChangeNotifier {
 
   Future<void> load() async {
     final userJson = await storage.getString(storage.kUser);
+    final token = await storage.getString(storage.kAccessToken);
     if (userJson != null) {
       try {
         user = UserProfile.fromJson(storage.decodeJson(userJson));
@@ -21,6 +22,7 @@ class SessionViewModel extends ChangeNotifier {
         signedIn = false;
       }
     }
+    accessToken = token?.isNotEmpty == true ? token : null;
     notifyListeners();
   }
 
@@ -34,6 +36,11 @@ class SessionViewModel extends ChangeNotifier {
     accessToken = token;
     user = UserProfile(id: userId, email: email, fullName: fullName ?? '');
     await storage.setString(storage.kUser, storage.encodeJson(user!.toJson()));
+    if (token != null && token.isNotEmpty) {
+      await storage.setString(storage.kAccessToken, token);
+    } else {
+      await storage.remove(storage.kAccessToken);
+    }
     notifyListeners();
   }
 
@@ -42,6 +49,7 @@ class SessionViewModel extends ChangeNotifier {
     user = null;
     accessToken = null;
     await storage.remove(storage.kUser);
+    await storage.remove(storage.kAccessToken);
     notifyListeners();
   }
 

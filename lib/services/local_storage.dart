@@ -5,6 +5,7 @@ class LocalStorage {
   static const _kIsDark = 'isDark';
   static const _kLanguage = 'language';
   static const _kUser = 'user';
+  static const _kAccessToken = 'accessToken';
   static const _kBookings = 'bookings';
 
   Future<bool?> getBool(String key) async {
@@ -46,6 +47,7 @@ class LocalStorage {
   String get kIsDark => _kIsDark;
   String get kLanguage => _kLanguage;
   String get kUser => _kUser;
+  String get kAccessToken => _kAccessToken;
   String get kBookings => _kBookings;
 
   // helpers

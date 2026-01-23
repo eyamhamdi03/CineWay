@@ -79,7 +79,12 @@ class MyApp extends StatelessWidget {
         routes: {
           '/get_started': (_) => const GetStartedScreen(),
           '/login': (_) => const LoginScreen(),
-          '/profile_setup': (_) => const ProfileSetupScreen(),
+          '/profile_setup': (context) {
+            final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+            return ProfileSetupScreen(
+              isInitialSetup: args?['isInitialSetup'] ?? false,
+            );
+          },
           '/home': (context) => MainNavigator(
                 initialIndex:
                     (ModalRoute.of(context)?.settings.arguments as int?) ?? 0,

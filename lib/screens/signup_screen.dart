@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../core/colors.dart';
 import '../viewmodel/auth_view_model.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -28,7 +27,11 @@ class _SignupScreenState extends State<SignupScreen> {
     if (!mounted) return;
 
     if (success) {
-      Navigator.pushReplacementNamed(context, '/profile_setup');
+      Navigator.pushReplacementNamed(
+        context,
+        '/profile_setup',
+        arguments: {'isInitialSetup': true},
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -49,181 +52,398 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const bg = Color(0xFF000000);
+    const primary = Color(0xFF4FC3F7);
+    const textPrimary = Color(0xFFF5F5F5);
+    const textSecondary = Color(0xFFB0B0B0);
+
     return Consumer<AuthViewModel>(
       builder: (context, authViewModel, _) {
         return Scaffold(
-          backgroundColor: AppColors.mirage,
-          appBar: AppBar(
-            backgroundColor: AppColors.mirage,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => Navigator.maybePop(context),
-            ),
-          ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Column(
-                      children: const [
-                        SizedBox(height: 8),
-                        Text('CineWay', style: TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w800)),
-                        SizedBox(height: 8),
-                        Text('Create Your Account', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700)),
+          backgroundColor: bg,
+          body: Container(
+            color: bg,
+            child: Stack(
+              children: [
+                // Top left blur - light blue
+                Positioned(
+                  top: -150,
+                  left: -150,
+                  child: Container(
+                    width: 350,
+                    height: 350,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          primary.withOpacity(0.25),
+                          Colors.transparent,
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primary.withOpacity(0.18),
+                          blurRadius: 80,
+                          spreadRadius: 20,
+                        ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // Error message
-                  if (authViewModel.errorMessage != null)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red.withOpacity(0.5)),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.error_outline, color: Colors.red[400], size: 20),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              authViewModel.errorMessage!,
-                              style: TextStyle(color: Colors.red[400], fontSize: 14),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: authViewModel.clearError,
-                            child: Icon(Icons.close, color: Colors.red[400], size: 18),
-                          ),
+                ),
+                // Bottom right blur - light blue
+                Positioned(
+                  bottom: -150,
+                  right: -150,
+                  child: Container(
+                    width: 350,
+                    height: 350,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          primary.withOpacity(0.20),
+                          Colors.transparent,
                         ],
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primary.withOpacity(0.14),
+                          blurRadius: 100,
+                          spreadRadius: 25,
+                        ),
+                      ],
                     ),
-
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text('Email', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          enabled: !authViewModel.isLoading,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: 'you@example.com',
-                            hintStyle: const TextStyle(color: AppColors.mirageLight),
-                            filled: true,
-                            fillColor: const Color(0xFF141A20),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                          ),
-                          validator: AuthViewModel.validateEmail,
-                        ),
-
-                        const SizedBox(height: 16),
-                        const Text('Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: !authViewModel.isPasswordVisible,
-                          enabled: !authViewModel.isLoading,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: 'Enter your password',
-                            hintStyle: const TextStyle(color: AppColors.mirageLight),
-                            filled: true,
-                            fillColor: const Color(0xFF141A20),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                authViewModel.isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                                color: AppColors.mirageLight,
-                              ),
-                              onPressed: authViewModel.togglePasswordVisibility,
-                            ),
-                          ),
-                          validator: AuthViewModel.validatePassword,
-                        ),
-
-                        const SizedBox(height: 16),
-                        const Text('Confirm Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _confirmController,
-                          obscureText: !authViewModel.isPasswordVisible,
-                          enabled: !authViewModel.isLoading,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: 'Re-enter your password',
-                            hintStyle: const TextStyle(color: AppColors.mirageLight),
-                            filled: true,
-                            fillColor: const Color(0xFF141A20),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                authViewModel.isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                                color: AppColors.mirageLight,
-                              ),
-                              onPressed: authViewModel.togglePasswordVisibility,
-                            ),
-                          ),
-                          validator: (v) => AuthViewModel.validatePasswordConfirmation(v, _passwordController.text),
-                        ),
-
-                        const SizedBox(height: 22),
-                        SizedBox(
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: authViewModel.isLoading ? null : () => _handleSignUp(authViewModel),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.dodgerBlue,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: authViewModel.isLoading
-                                ? const CircularProgressIndicator(color: Colors.white)
-                                : const Text('Sign Up', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                          ),
-                        ),
-
-                        const SizedBox(height: 18),
-                        Center(
-                          child: RichText(
-                            text: TextSpan(
-                              text: 'Already have an account? ',
-                              style: const TextStyle(color: AppColors.jumbo),
+                  ),
+                ),
+                // Main content
+                SafeArea(
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: MediaQuery.of(context).size.height -
+                            MediaQuery.of(context).padding.top,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 40),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
                               children: [
-                                TextSpan(
-                                  text: 'Sign In',
-                                  style: const TextStyle(color: AppColors.dodgerBlue, fontWeight: FontWeight.w700),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = authViewModel.isLoading ? null : () => Navigator.maybePop(context),
+                                const SizedBox(height: 40),
+                                // Logo Icon
+                                Container(
+                                  width: 90,
+                                  height: 90,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[900],
+                                    borderRadius: BorderRadius.circular(26),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.08),
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.person_add,
+                                    color: primary,
+                                    size: 44,
+                                  ),
+                                ),
+                                const SizedBox(height: 40),
+                                // Title
+                                const Text(
+                                  'Join CineWay',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: textPrimary,
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.w900,
+                                    height: 1.2,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                // Subtitle
+                                const Text(
+                                  'Create your account to get started',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: textSecondary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                const SizedBox(height: 50),
+                                // Form
+                                Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Email label
+                                      const Text(
+                                        'EMAIL ADDRESS',
+                                        style: TextStyle(
+                                          color: textSecondary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      _InputField(
+                                        controller: _emailController,
+                                        hint: 'hello@example.com',
+                                        icon: Icons.mail_outline,
+                                        enabled: !authViewModel.isLoading,
+                                        validator:
+                                            AuthViewModel.validateEmail,
+                                      ),
+                                      const SizedBox(height: 28),
+                                      // Password label
+                                      const Text(
+                                        'PASSWORD',
+                                        style: TextStyle(
+                                          color: textSecondary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      _InputField(
+                                        controller: _passwordController,
+                                        hint: '••••••••',
+                                        icon: Icons.lock_outline,
+                                        enabled: !authViewModel.isLoading,
+                                        obscure:
+                                            !authViewModel.isPasswordVisible,
+                                        validator: AuthViewModel
+                                            .validatePassword,
+                                        suffix: IconButton(
+                                          icon: Icon(
+                                            authViewModel.isPasswordVisible
+                                                ? Icons.visibility
+                                                : Icons.visibility_off,
+                                            color: textSecondary,
+                                          ),
+                                          onPressed: authViewModel
+                                              .togglePasswordVisibility,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 28),
+                                      // Confirm Password label
+                                      const Text(
+                                        'CONFIRM PASSWORD',
+                                        style: TextStyle(
+                                          color: textSecondary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      _InputField(
+                                        controller: _confirmController,
+                                        hint: '••••••••',
+                                        icon: Icons.lock_outline,
+                                        enabled: !authViewModel.isLoading,
+                                        obscure:
+                                            !authViewModel.isPasswordVisible,
+                                        validator: (v) =>
+                                            AuthViewModel
+                                                .validatePasswordConfirmation(
+                                                    v,
+                                                    _passwordController
+                                                        .text),
+                                        suffix: IconButton(
+                                          icon: Icon(
+                                            authViewModel.isPasswordVisible
+                                                ? Icons.visibility
+                                                : Icons.visibility_off,
+                                            color: textSecondary,
+                                          ),
+                                          onPressed: authViewModel
+                                              .togglePasswordVisibility,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 28),
+                                      // Sign Up Button
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height: 56,
+                                        child: ElevatedButton(
+                                          onPressed: authViewModel.isLoading
+                                              ? null
+                                              : () => _handleSignUp(
+                                                  authViewModel),
+                                          style:
+                                              ElevatedButton.styleFrom(
+                                            backgroundColor: primary,
+                                            disabledBackgroundColor:
+                                                primary.withOpacity(0.5),
+                                            shape:
+                                                RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(18),
+                                            ),
+                                            elevation: 0,
+                                          ),
+                                          child: authViewModel.isLoading
+                                              ? const SizedBox(
+                                                  width: 24,
+                                                  height: 24,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation<
+                                                            Color>(
+                                                            Colors.black),
+                                                    strokeWidth: 2.5,
+                                                  ),
+                                                )
+                                              : const Text(
+                                                  'Sign Up',
+                                                  style: TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 17,
+                                                    fontWeight:
+                                                        FontWeight.w700,
+                                                  ),
+                                                ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
+                            // Sign In Link - pushed to bottom
+                            Center(
+                              child: RichText(
+                                textAlign: TextAlign.center,
+                                text: TextSpan(
+                                  children: [
+                                    const TextSpan(
+                                      text: 'Already have an account? ',
+                                      style: TextStyle(
+                                        color: textSecondary,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: 'Sign In',
+                                      style: const TextStyle(
+                                        color: primary,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () =>
+                                            Navigator.maybePop(context),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _InputField extends StatelessWidget {
+  const _InputField({
+    required this.controller,
+    required this.hint,
+    required this.icon,
+    this.suffix,
+    this.enabled = true,
+    this.obscure = false,
+    this.validator,
+  });
+
+  final TextEditingController controller;
+  final String hint;
+  final IconData icon;
+  final Widget? suffix;
+  final bool enabled;
+  final bool obscure;
+  final String? Function(String?)? validator;
+
+  @override
+  Widget build(BuildContext context) {
+    const surface = Color(0xFF2C2C2C);
+    const textPrimary = Color(0xFFF5F5F5);
+    const textSecondary = Color(0xFFB0B0B0);
+    const primary = Color(0xFF4FC3F7);
+
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      enabled: enabled,
+      obscureText: obscure,
+      style: const TextStyle(
+          color: textPrimary, fontWeight: FontWeight.w600),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(
+          color: textSecondary,
+          fontWeight: FontWeight.w500,
+        ),
+        filled: true,
+        fillColor: surface,
+        prefixIcon: Icon(icon, color: textSecondary),
+        suffixIcon: suffix,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide(
+            color: Colors.white.withOpacity(0.1),
+            width: 1.5,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide(
+            color: Colors.white.withOpacity(0.1),
+            width: 1.5,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide(
+            color: primary.withOpacity(0.5),
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(
+            color: Colors.red,
+            width: 1.5,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(
+            color: Colors.red,
+            width: 2,
+          ),
+        ),
+      ),
     );
   }
 }

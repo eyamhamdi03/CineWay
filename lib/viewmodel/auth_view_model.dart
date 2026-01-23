@@ -38,24 +38,15 @@ class AuthViewModel extends ChangeNotifier {
 
     try {
       final result = await _authRepository.signUp(email, password);
+      // After registration, perform a login to obtain access token and profile
+      // data (the register endpoint does not return a token).
+      final loginResult = await _authRepository.signIn(email, password);
+      final accessToken = (loginResult['access_token'] ?? loginResult['token'] ?? '').toString();
+      if (accessToken.isEmpty) {
+        throw Exception('Missing access token after registration');
+      }
 
-      // Your backend might return user object differently.
-      final userId = (result['id'] ?? result['user_id'] ?? '').toString();
-      final fullName = result['full_name']?.toString();
-
-      // Some APIs return token on signup, some don't.
-      final accessToken = result['access_token']?.toString();
-
-      await _session.signInFromAPI(
-        email: email,
-        userId: userId.isEmpty ? 'u-${email.hashCode}' : userId,
-        fullName: fullName,
-        token: accessToken,
-      );
-
-      _isLoading = false;
-      notifyListeners();
-      return true;
+      return await _loginWithToken(accessToken);
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
@@ -74,10 +65,25 @@ class AuthViewModel extends ChangeNotifier {
       final result = await _authRepository.signIn(email, password);
 
       final accessToken = (result['access_token'] ?? result['token'] ?? '').toString();
-      final userId = (result['id'] ?? result['user_id'] ?? 'u-${email.hashCode}').toString();
+      if (accessToken.isEmpty) {
+        throw Exception('Missing access token');
+      }
 
-      // Many backends don't send full_name on login
-      final fullName = result['full_name']?.toString();
+      return await _loginWithToken(accessToken);
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> _loginWithToken(String accessToken) async {
+    try {
+      final me = await _authRepository.fetchCurrentUser(accessToken);
+      final email = me['email']?.toString() ?? '';
+      final userId = (me['id'] ?? me['user_id'] ?? 'u-${email.hashCode}').toString();
+      final fullName = me['full_name']?.toString();
 
       await _session.signInFromAPI(
         email: email,
@@ -87,6 +93,7 @@ class AuthViewModel extends ChangeNotifier {
       );
 
       _isLoading = false;
+      _errorMessage = null;
       notifyListeners();
       return true;
     } catch (e) {

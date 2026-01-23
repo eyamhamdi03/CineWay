@@ -80,7 +80,10 @@ class MyApp extends StatelessWidget {
           '/get_started': (_) => const GetStartedScreen(),
           '/login': (_) => const LoginScreen(),
           '/profile_setup': (_) => const ProfileSetupScreen(),
-          '/home': (_) => const MainNavigator(),
+          '/home': (context) => MainNavigator(
+                initialIndex:
+                    (ModalRoute.of(context)?.settings.arguments as int?) ?? 0,
+              ),
           '/bookings': (_) => const BookingsScreen(),
           '/booking_confirmation': (_) =>
               const BookingConfirmationScreen(),
@@ -91,7 +94,9 @@ class MyApp extends StatelessWidget {
 }
 
 class MainNavigator extends StatefulWidget {
-  const MainNavigator({super.key});
+  const MainNavigator({super.key, this.initialIndex = 0});
+
+  final int initialIndex;
 
   @override
   State<MainNavigator> createState() => _MainNavigatorState();
@@ -99,7 +104,7 @@ class MainNavigator extends StatefulWidget {
 
 class _MainNavigatorState extends State<MainNavigator>
     with SingleTickerProviderStateMixin {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   late final AnimationController _fabController;
   late final Animation<double> _scaleAnim;
@@ -115,6 +120,8 @@ class _MainNavigatorState extends State<MainNavigator>
   @override
   void initState() {
     super.initState();
+
+    _selectedIndex = widget.initialIndex;
 
     _fabController = AnimationController(
       vsync: this,

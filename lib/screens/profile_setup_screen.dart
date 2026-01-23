@@ -172,11 +172,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         const SnackBar(content: Text('Profile updated')),
       );
 
-      if (widget.user != null) {
-        Navigator.maybePop(context);
-      } else {
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      }
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/home',
+        (route) => false,
+        arguments: 4,
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

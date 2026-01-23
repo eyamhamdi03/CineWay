@@ -39,7 +39,12 @@ class ProfileScreen extends StatelessWidget {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-          onPressed: () => Navigator.maybePop(context),
+          onPressed: () => Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/home',
+            (route) => false,
+            arguments: 0,
+          ),
         ),
         title: Text(localizations.profile_title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       ),

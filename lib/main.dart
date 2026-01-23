@@ -22,6 +22,7 @@ import 'viewmodel/movie/movie_detail_viewmodel.dart';
 import 'viewmodel/search_viewmodel.dart';
 import 'viewmodel/auth_view_model.dart';
 
+import 'services/app_state.dart';
 import 'services/local_storage.dart';
 import 'viewmodel/settings/settings_viewmodel.dart';
 import 'viewmodel/session/session_viewmodel.dart';
@@ -34,6 +35,7 @@ void main() {
     MultiProvider(
       providers: [
         Provider<LocalStorage>.value(value: storage),
+        ChangeNotifierProvider(create: (_) => AppState()..load()),
         ChangeNotifierProvider(create: (_) => SettingsViewModel(storage)..load()),
         ChangeNotifierProvider(create: (_) => SessionViewModel(storage)..load()),
         ChangeNotifierProvider(create: (_) => BookingsViewModel(storage)..load()),

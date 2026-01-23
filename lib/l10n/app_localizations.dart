@@ -125,6 +125,66 @@ abstract class AppLocalizations {
   /// **'English / Français'**
   String get language_sub;
 
+  /// No description provided for @preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get preferences;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @payments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get payments;
+
+  /// No description provided for @payment_methods.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Methods'**
+  String get payment_methods;
+
+  /// No description provided for @purchase_history.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase History'**
+  String get purchase_history;
+
+  /// No description provided for @support_legal.
+  ///
+  /// In en, this message translates to:
+  /// **'Support & Legal'**
+  String get support_legal;
+
+  /// No description provided for @help_support.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Support'**
+  String get help_support;
+
+  /// No description provided for @terms_of_service.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get terms_of_service;
+
+  /// No description provided for @privacy_policy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacy_policy;
+
+  /// No description provided for @delete_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get delete_account;
+
   /// No description provided for @log_out.
   ///
   /// In en, this message translates to:
@@ -292,6 +352,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scan the QR code below for entry.'**
   String get your_ticket_scan_qr;
+
+  /// No description provided for @notification_settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Settings'**
+  String get notification_settings;
+
+  /// No description provided for @customize_notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize your notification preferences'**
+  String get customize_notifications;
+
+  /// No description provided for @activity_alerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Alerts'**
+  String get activity_alerts;
+
+  /// No description provided for @marketing_updates.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketing & Updates'**
+  String get marketing_updates;
+
+  /// No description provided for @new_movies.
+  ///
+  /// In en, this message translates to:
+  /// **'New Movies'**
+  String get new_movies;
+
+  /// No description provided for @new_movies_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when new movies are available'**
+  String get new_movies_desc;
+
+  /// No description provided for @showtime_reminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Showtime Reminders'**
+  String get showtime_reminders;
+
+  /// No description provided for @showtime_reminders_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders before your movie starts'**
+  String get showtime_reminders_desc;
+
+  /// No description provided for @promotions.
+  ///
+  /// In en, this message translates to:
+  /// **'Promotions'**
+  String get promotions;
+
+  /// No description provided for @promotions_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclusive offers and discounts'**
+  String get promotions_desc;
+
+  /// No description provided for @ticket_updates.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket Updates'**
+  String get ticket_updates;
+
+  /// No description provided for @ticket_updates_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes to your bookings'**
+  String get ticket_updates_desc;
+
+  /// No description provided for @critical_alerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical System Alerts'**
+  String get critical_alerts;
+
+  /// No description provided for @critical_alerts_text.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical system alerts about your account security and payment issues cannot be disabled'**
+  String get critical_alerts_text;
+
+  /// No description provided for @saved_cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Cards'**
+  String get saved_cards;
+
+  /// No description provided for @add_new_method.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Method'**
+  String get add_new_method;
+
+  /// No description provided for @other_options.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Options'**
+  String get other_options;
+
+  /// No description provided for @transaction_history.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction History'**
+  String get transaction_history;
+
+  /// No description provided for @redeem_gift_card.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem Gift Card'**
+  String get redeem_gift_card;
+
+  /// No description provided for @search_transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Search transactions'**
+  String get search_transactions;
+
+  /// No description provided for @total_spent.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Spent'**
+  String get total_spent;
+
+  /// No description provided for @load_older_transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Load older transactions'**
+  String get load_older_transactions;
+
+  /// No description provided for @ticket.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket'**
+  String get ticket;
+
+  /// No description provided for @search_for_help.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for help...'**
+  String get search_for_help;
+
+  /// No description provided for @categories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get categories;
+
+  /// No description provided for @popular_faqs.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular FAQs'**
+  String get popular_faqs;
+
+  /// No description provided for @still_need_help.
+  ///
+  /// In en, this message translates to:
+  /// **'Still need help?'**
+  String get still_need_help;
+
+  /// No description provided for @support_team_available.
+  ///
+  /// In en, this message translates to:
+  /// **'Our support team is available 24/7 to assist you with any inquiries.'**
+  String get support_team_available;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

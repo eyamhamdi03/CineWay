@@ -24,6 +24,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get language_sub => 'English / Français';
 
   @override
+  String get preferences => 'Preferences';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get payments => 'Payments';
+
+  @override
+  String get payment_methods => 'Payment Methods';
+
+  @override
+  String get purchase_history => 'Purchase History';
+
+  @override
+  String get support_legal => 'Support & Legal';
+
+  @override
+  String get help_support => 'Help & Support';
+
+  @override
+  String get terms_of_service => 'Terms of Service';
+
+  @override
+  String get privacy_policy => 'Privacy Policy';
+
+  @override
+  String get delete_account => 'Delete Account';
+
+  @override
   String get log_out => 'Log Out';
 
   @override
@@ -106,4 +136,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get your_ticket_scan_qr => 'Scan the QR code below for entry.';
+
+  @override
+  String get notification_settings => 'Notification Settings';
+
+  @override
+  String get customize_notifications => 'Customize your notification preferences';
+
+  @override
+  String get activity_alerts => 'Activity Alerts';
+
+  @override
+  String get marketing_updates => 'Marketing & Updates';
+
+  @override
+  String get new_movies => 'New Movies';
+
+  @override
+  String get new_movies_desc => 'Get notified when new movies are available';
+
+  @override
+  String get showtime_reminders => 'Showtime Reminders';
+
+  @override
+  String get showtime_reminders_desc => 'Reminders before your movie starts';
+
+  @override
+  String get promotions => 'Promotions';
+
+  @override
+  String get promotions_desc => 'Exclusive offers and discounts';
+
+  @override
+  String get ticket_updates => 'Ticket Updates';
+
+  @override
+  String get ticket_updates_desc => 'Changes to your bookings';
+
+  @override
+  String get critical_alerts => 'Critical System Alerts';
+
+  @override
+  String get critical_alerts_text => 'Critical system alerts about your account security and payment issues cannot be disabled';
+
+  @override
+  String get saved_cards => 'Saved Cards';
+
+  @override
+  String get add_new_method => 'Add New Method';
+
+  @override
+  String get other_options => 'Other Options';
+
+  @override
+  String get transaction_history => 'Transaction History';
+
+  @override
+  String get redeem_gift_card => 'Redeem Gift Card';
+
+  @override
+  String get search_transactions => 'Search transactions';
+
+  @override
+  String get total_spent => 'Total Spent';
+
+  @override
+  String get load_older_transactions => 'Load older transactions';
+
+  @override
+  String get ticket => 'Ticket';
+
+  @override
+  String get search_for_help => 'Search for help...';
+
+  @override
+  String get categories => 'Categories';
+
+  @override
+  String get popular_faqs => 'Popular FAQs';
+
+  @override
+  String get still_need_help => 'Still need help?';
+
+  @override
+  String get support_team_available => 'Our support team is available 24/7 to assist you with any inquiries.';
 }

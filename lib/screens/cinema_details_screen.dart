@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import '../core/colors.dart';
-import '../data/mock_movies.dart';
 import '../repository/cinema_repository.dart';
+import '../repository/showtime_repository.dart';
+import '../repository/movie_repository.dart';
 import '../models/cinema.dart';
+import '../models/screening.dart';
+import '../models/movie.dart';
+import 'details_screen.dart';
 
 class CinemaDetailsScreen extends StatelessWidget {
   final int cinemaId;
   CinemaDetailsScreen({super.key, required this.cinemaId});
 
   final _repo = CinemaRepository();
+  final _showtimeRepo = ShowtimeRepository();
+  final _movieRepo = MovieRepository();
 
   void _showSnack(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -31,6 +37,25 @@ class CinemaDetailsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildPoster(Movie? movie) {
+    final url = movie?.bannerUrl ?? '';
+    if (url.isNotEmpty && (url.startsWith('http://') || url.startsWith('https://'))) {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Icon(Icons.movie, size: 60, color: AppColors.jumbo),
+      );
+    }
+    if (url.isNotEmpty) {
+      return Image.asset(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Icon(Icons.movie, size: 60, color: AppColors.jumbo),
+      );
+    }
+    return const Icon(Icons.movie, size: 60, color: AppColors.jumbo);
   }
 
   @override
@@ -80,8 +105,13 @@ class CinemaDetailsScreen extends StatelessWidget {
                         height: 220,
                         width: double.infinity,
                         decoration: const BoxDecoration(
-                          image: DecorationImage(image: AssetImage('assets/cinema_banner.jpg'), fit: BoxFit.cover),
+                          gradient: LinearGradient(
+                            colors: [AppColors.nileBlue, AppColors.dodgerBlue],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                         ),
+                        child: const Center(child: Icon(Icons.movie_filter, color: Colors.white70, size: 64)),
                       ),
                       Positioned(
                         left: 12,
@@ -171,40 +201,87 @@ class CinemaDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 18),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 18),
-                    child: const Text('Now Showing', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                    child: const Text('Showtimes Today', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
                   ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    height: 260,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (context, index) {
-                        final m = mockMovies[index % mockMovies.length];
+                  FutureBuilder<List<Screening>>(
+                    future: _showtimeRepo.getShowtimesByCinema(cinemaId: cinemaId),
+                    builder: (context, snap) {
+                      if (snap.connectionState == ConnectionState.waiting) {
+                        return const SizedBox(height: 260, child: Center(child: CircularProgressIndicator(color: AppColors.dodgerBlue)));
+                      }
+                      if (snap.hasError || !snap.hasData || snap.data!.isEmpty) {
                         return SizedBox(
-                          width: 140,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                height: 180,
-                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: const Color(0xFF141A20)),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: m.bannerUrl.isNotEmpty ? Image.asset(m.bannerUrl, fit: BoxFit.cover) : const Icon(Icons.movie, size: 60, color: AppColors.jumbo),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(m.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                              const SizedBox(height: 4),
-                              Text(m.duration, style: const TextStyle(color: AppColors.jumbo)),
-                            ],
+                          height: 120,
+                          child: Center(
+                            child: Text(
+                              snap.hasError ? 'Error loading showtimes' : 'No showtimes available',
+                              style: const TextStyle(color: AppColors.jumbo),
+                            ),
                           ),
                         );
-                      },
-                      separatorBuilder: (_, __) => const SizedBox(width: 12),
-                      itemCount: mockMovies.length,
-                    ),
+                      }
+
+                      final showtimes = snap.data!;
+                      return SizedBox(
+                        height: 260,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
+                          scrollDirection: Axis.horizontal,
+                          itemBuilder: (context, index) {
+                            final showtime = showtimes[index];
+                            final time = showtime.screeningTime;
+                            final dateStr = '${time.year}-${time.month.toString().padLeft(2, '0')}-${time.day.toString().padLeft(2, '0')}';
+                            final timeStr = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+                            return FutureBuilder<Movie?>(
+                              future: _movieRepo.getMovieById(showtime.movieId),
+                              builder: (context, movieSnap) {
+                                final movie = movieSnap.data;
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => MovieDetailsScreen(movieId: showtime.movieId),
+                                      ),
+                                    );
+                                  },
+                                  child: SizedBox(
+                                    width: 140,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          height: 140,
+                                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: const Color(0xFF141A20)),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: _buildPoster(movie),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          movie?.title ?? 'Loading...',
+                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(dateStr, style: const TextStyle(color: AppColors.dodgerBlue, fontWeight: FontWeight.w600)),
+                                        const SizedBox(height: 4),
+                                        Text(timeStr, style: const TextStyle(color: AppColors.jumbo, fontSize: 12)),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          separatorBuilder: (_, __) => const SizedBox(width: 12),
+                          itemCount: showtimes.length,
+                        ),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 24),

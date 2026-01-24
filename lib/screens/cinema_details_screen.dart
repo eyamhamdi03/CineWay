@@ -105,13 +105,7 @@ class CinemaDetailsScreen extends StatelessWidget {
                         height: 220,
                         width: double.infinity,
                         decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [AppColors.nileBlue, AppColors.dodgerBlue],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: const Center(child: Icon(Icons.movie_filter, color: Colors.white70, size: 64)),
+                          image: DecorationImage(image: AssetImage('assets/cinema_banner.jpg'), fit: BoxFit.cover),),
                       ),
                       Positioned(
                         left: 12,

@@ -34,8 +34,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: "Home",
+            icon: Icon(Icons.movie_outlined),
+            label: "Movies",
           ),
           BottomNavigationBarItem(icon: Icon(Icons.movie), label: "Movies"),
           BottomNavigationBarItem(

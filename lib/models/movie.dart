@@ -14,6 +14,10 @@ class Movie {
   final List<Cast> cast;
   final List<Review> reviews;
   final int? voteCount;
+  final String? director;
+  final List<String>? writers;
+  final String? language;
+  final String? trailerUrl;
 
   Movie({
     required this.id,
@@ -28,6 +32,10 @@ class Movie {
     required this.cast,
     required this.reviews,
     this.voteCount,
+    this.director,
+    this.writers,
+    this.language,
+    this.trailerUrl,
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
@@ -37,7 +45,7 @@ class Movie {
       id: json["id"],
       title: json["title"],
       description: json["description"] ?? "",
-      bannerUrl: json["image_url"] ?? "",   // should be a URL
+      bannerUrl: json["image_url"] ?? "",
       categories: List<String>.from(json["genre"] ?? []),
       duration: json["duration_minutes"]?.toString() ?? "",
       releaseDate: rd,
@@ -49,9 +57,12 @@ class Movie {
       }).toList(),
       reviews: [],
       voteCount: json["vote_count"],
+      director: json["director"],
+      writers: json["writers"] is List ? List<String>.from(json["writers"] as List) : null,
+      language: json["language"],
+      trailerUrl: json["trailer_url"],
     );
   }
-
 
   Map<String, dynamic> toJson() {
     return {
@@ -66,6 +77,10 @@ class Movie {
       "cast": cast,
       "reviews": reviews.map((r) => r.toJson()).toList(),
       "voteCount": voteCount,
+      "director": director,
+      "writers": writers,
+      "language": language,
+      "trailerUrl": trailerUrl,
     };
   }
 }

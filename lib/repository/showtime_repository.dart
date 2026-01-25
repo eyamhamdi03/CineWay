@@ -37,6 +37,36 @@ class ShowtimeRepository {
     }
   }
 
+  /// Get showtimes for a specific movie with detailed cinema info
+  Future<List<Map<String, dynamic>>> getShowtimesByMovieDetailed({
+    required int movieId,
+    String? date,
+    int skip = 0,
+    int limit = 200,
+  }) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/screenings').replace(
+        queryParameters: {
+          'movie_id': movieId.toString(),
+          'skip': skip.toString(),
+          'limit': limit.toString(),
+          if (date != null) 'date': date,
+        },
+      );
+
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load showtimes: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching showtimes: $e');
+    }
+  }
+
   /// Get a specific showtime by ID
   Future<Screening> getShowtimeById(int showtimeId) async {
     try {

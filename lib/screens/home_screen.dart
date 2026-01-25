@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'details_screen.dart';
+import 'movies_screen.dart';
 import '../models/movie.dart';
 import '../repository/movie_repository.dart';
 import 'package:provider/provider.dart';
@@ -239,7 +240,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                     GestureDetector(
-                                      onTap: () {},
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const MoviesScreen(
+                                              title: 'Now in Cinemas',
+                                              nowInCinemasOnly: true,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                       child: const Text(
                                         'See all',
                                         style: TextStyle(
@@ -380,7 +391,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                     GestureDetector(
-                                      onTap: () {},
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const MoviesScreen(
+                                              title: 'Popular Movies',
+                                            ),
+                                          ),
+                                        );
+                                      },
                                       child: const Text(
                                         'See all',
                                         style: TextStyle(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'details_screen.dart';
 import 'movies_screen.dart';
+import 'notifications_screen.dart';
 import '../models/movie.dart';
 import '../repository/movie_repository.dart';
 import 'package:provider/provider.dart';
@@ -132,18 +133,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Stack(
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2C2C2C),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withOpacity(0.05)),
-                        ),
-                        child: const Icon(
-                          Icons.notifications_outlined,
-                          color: Color(0xFFF5F5F5),
-                          size: 20,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                          );
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2C2C2C),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withOpacity(0.05)),
+                          ),
+                          child: const Icon(
+                            Icons.notifications_outlined,
+                            color: Color(0xFFF5F5F5),
+                            size: 20,
+                          ),
                         ),
                       ),
                       Positioned(

@@ -1,4 +1,5 @@
 import 'movie.dart';
+import 'review.dart';
 
 class Cinema {
   final int id;
@@ -23,6 +24,9 @@ class Cinema {
   /// Backend creation date
   final DateTime createdAt;
 
+  /// Cinema reviews
+  final List<Review> reviews;
+
   Cinema({
     required this.id,
     required this.name,
@@ -36,10 +40,13 @@ class Cinema {
     required this.isAccessible,
     required this.amenities,
     required this.createdAt,
+    this.reviews = const [],
   });
 
   // ----------------- FROM JSON -----------------
   factory Cinema.fromJson(Map<String, dynamic> json) {
+    final reviewsList = (json['reviews'] as List?)?.map((r) => Review.fromJson(r as Map<String, dynamic>)).toList() ?? [];
+    
     return Cinema(
       id: json['id'],
       name: json['name'],
@@ -53,6 +60,7 @@ class Cinema {
       isAccessible: json['isAccessible'] ?? false,
       amenities: List<String>.from(json['amenities'] ?? []),
       createdAt: DateTime.tryParse(json['created_at'] ?? "") ?? DateTime.now(),
+      reviews: reviewsList,
     );
   }
 
@@ -71,6 +79,7 @@ class Cinema {
       "isAccessible": isAccessible,
       "amenities": amenities,
       "created_at": createdAt.toIso8601String(),
+      "reviews": reviews.map((r) => r.toJson()).toList(),
     };
   }
 }

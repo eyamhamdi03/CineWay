@@ -6,15 +6,21 @@ import '../repository/movie_repository.dart';
 import '../models/cinema.dart';
 import '../models/screening.dart';
 import '../models/movie.dart';
+import '../models/review.dart';
 import 'details_screen.dart';
 
-class CinemaDetailsScreen extends StatelessWidget {
+class CinemaDetailsScreen extends StatefulWidget {
   final int cinemaId;
   CinemaDetailsScreen({super.key, required this.cinemaId});
 
-  final _repo = CinemaRepository();
-  final _showtimeRepo = ShowtimeRepository();
-  final _movieRepo = MovieRepository();
+  @override
+  State<CinemaDetailsScreen> createState() => _CinemaDetailsScreenState();
+}
+
+class _CinemaDetailsScreenState extends State<CinemaDetailsScreen> {
+  late final _repo = CinemaRepository();
+  late final _showtimeRepo = ShowtimeRepository();
+  late final _movieRepo = MovieRepository();
 
   void _showSnack(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -61,7 +67,7 @@ class CinemaDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Cinema?>(
-      future: _repo.getCinemaById(cinemaId),
+      future: _repo.getCinemaById(widget.cinemaId),
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
           return const Scaffold(
@@ -192,14 +198,40 @@ class CinemaDetailsScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _showAddReviewDialog(context, cinema),
+                            icon: const Icon(Icons.edit),
+                            label: const Text('Add Review', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.dodgerBlue, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _showAllReviews(context, cinema),
+                            icon: const Icon(Icons.star, color: AppColors.dodgerBlue),
+                            label: const Text('See All Reviews', style: TextStyle(color: AppColors.dodgerBlue, fontWeight: FontWeight.w700)),
+                            style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.dodgerBlue), backgroundColor: const Color(0xFF141A20), padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 18),
                     child: const Text('Showtimes Today', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
                   ),
                   const SizedBox(height: 12),
                   FutureBuilder<List<Screening>>(
-                    future: _showtimeRepo.getShowtimesByCinema(cinemaId: cinemaId),
+                    future: _showtimeRepo.getShowtimesByCinema(cinemaId: widget.cinemaId),
                     builder: (context, snap) {
                       if (snap.connectionState == ConnectionState.waiting) {
                         return const SizedBox(height: 260, child: Center(child: CircularProgressIndicator(color: AppColors.dodgerBlue)));
@@ -287,4 +319,341 @@ class CinemaDetailsScreen extends StatelessWidget {
       },
     );
   }
-}
+  Widget _buildReviewCard(Review review) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A3942),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundImage: NetworkImage(review.reviewerAvatar),
+                onBackgroundImageError: (_, __) {},
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(review.reviewerName, style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        ...List.generate(
+                          5,
+                          (index) => Icon(
+                            index < review.rating.toInt() ? Icons.star : Icons.star_outline,
+                            color: Colors.amber,
+                            size: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text('${review.rating}', style: const TextStyle(fontSize: 12, color: AppColors.jumbo)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(review.comment, style: const TextStyle(fontSize: 12, color: AppColors.jumbo, height: 1.5), maxLines: 3, overflow: TextOverflow.ellipsis),
+        ],
+      ),
+    );
+  }
+
+  void _showAddReviewDialog(BuildContext context, Cinema cinema) {
+    double rating = 5;
+    final commentController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.dodgerBlue.withOpacity(0.2),
+                  blurRadius: 20,
+                  spreadRadius: 0,
+                )
+              ],
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: AppColors.dodgerBlue.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.star, color: AppColors.dodgerBlue, size: 28),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Share Your Experience',
+                          style: TextStyle(
+                            fontSize: 22,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Help others discover great cinemas',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(color: Color(0xFF2A2A2A), height: 1),
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Rating Section
+                        const Text(
+                          'How would you rate this cinema?',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              5,
+                              (index) => GestureDetector(
+                                onTap: () => setState(() => rating = (index + 1).toDouble()),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  child: AnimatedScale(
+                                    scale: index < rating ? 1.2 : 1.0,
+                                    duration: const Duration(milliseconds: 200),
+                                    child: Icon(
+                                      index < rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                                      color: index < rating ? Colors.amber : Colors.white.withOpacity(0.3),
+                                      size: 36,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Center(
+                          child: Text(
+                            '${rating.toStringAsFixed(0)} / 5.0',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.amber[400],
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                        // Comment Section
+                        const Text(
+                          'Tell us more about your experience',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: commentController,
+                          maxLines: 5,
+                          maxLength: 500,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Share your thoughts about facilities, service, and atmosphere...',
+                            hintStyle: TextStyle(
+                              color: Colors.white.withOpacity(0.4),
+                              fontSize: 13,
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFF2A2A2A),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppColors.dodgerBlue, width: 2),
+                            ),
+                            contentPadding: const EdgeInsets.all(16),
+                            counterStyle: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(color: Color(0xFF2A2A2A), height: 1),
+                  // Actions
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              backgroundColor: const Color(0xFF2A2A2A),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              gradient: LinearGradient(
+                                colors: [AppColors.dodgerBlue, AppColors.dodgerBlue.withOpacity(0.8)],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.dodgerBlue.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (commentController.text.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Please write your review')),
+                                  );
+                                  return;
+                                }
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('Review submitted successfully! 🎉'),
+                                    backgroundColor: Colors.green[600],
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                                Navigator.pop(context);
+                                commentController.clear();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              child: const Text(
+                                'Submit Review',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAllReviews(BuildContext context, Cinema cinema) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF1E1E1E),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text('All Reviews (${cinema.reviews.length})', style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: cinema.reviews.isEmpty
+                  ? const Center(child: Text('No reviews yet', style: TextStyle(color: AppColors.jumbo)))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      itemCount: cinema.reviews.length,
+                      itemBuilder: (_, index) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildReviewCard(cinema.reviews[index]),
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }}

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/colors.dart';
-import '../services/app_state.dart';
+import '../repository/seat_reservation_repository.dart';
+import '../repository/ticket_repository.dart';
+import '../viewmodel/session/session_viewmodel.dart';
+import '../viewmodel/bookings/my_bookings_viewmodel.dart';
 import 'booking_confirmation_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -10,8 +13,19 @@ class PaymentScreen extends StatefulWidget {
   final String? movieTitle;
   final String? cinema;
   final String? dateTime;
+  final List<int>? reservationIds;
+  final int? screeningId;
 
-  const PaymentScreen({super.key, this.seats, this.amount, this.movieTitle, this.cinema, this.dateTime});
+  const PaymentScreen({
+    super.key,
+    this.seats,
+    this.amount,
+    this.movieTitle,
+    this.cinema,
+    this.dateTime,
+    this.reservationIds,
+    this.screeningId,
+  });
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -28,6 +42,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
   bool _saveCard = true;
 
   late double _amount;
+  bool _isPaying = false;
+  String? _error;
+
+  // Uses reservation-based booking, same as Angular.
+  final _seatRepo = SeatReservationRepository();
+  final _ticketRepo = TicketRepository();
 
   @override
   void dispose() {
@@ -43,27 +63,92 @@ class _PaymentScreenState extends State<PaymentScreen> {
     super.initState();
     _amount = widget.amount ?? 25.50;
   }
-
   void _selectMethod(int index) => setState(() => _selectedMethod = index);
 
   void _pay() {
+    if (_isPaying) return;
     if (_selectedMethod == 0) {
       // If card selected, require form valid
       if (!_formKey.currentState!.validate()) return;
     }
-    // Demo success: create booking and navigate to confirmation
-    final bookingId = 'CW-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
-    final seats = widget.seats ?? ['A1'];
-    final booking = Booking(id: bookingId, movieTitle: widget.movieTitle ?? 'Movie', dateTime: widget.dateTime ?? 'Today • 7:30 PM', cinema: widget.cinema ?? 'CineWay', seats: seats.join(', '));
+    _payAndBook();
+  }
 
-    // add to AppState
-    Provider.of<AppState>(context, listen: false).addBooking(booking);
+  Future<void> _payAndBook() async {
+    setState(() {
+      _isPaying = true;
+      _error = null;
+    });
 
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment successful')));
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => BookingConfirmationScreen(booking: booking)),
-    );
+    try {
+      final session = context.read<SessionViewModel>();
+      final token = session.accessToken;
+      final reservationIds = widget.reservationIds ?? const <int>[];
+      if (token == null || token.isEmpty) {
+        throw Exception('You must be signed in to complete booking');
+      }
+      if (reservationIds.isEmpty) {
+        throw Exception('No reservation ids found. Please go back and select seats again.');
+      }
+
+      final paymentId = 'demo-${DateTime.now().millisecondsSinceEpoch}';
+      final bookingResult = await _seatRepo.bookFromReservation(
+        reservationIds: reservationIds,
+        paymentId: paymentId,
+        token: token,
+      );
+
+      if (bookingResult.tickets.isEmpty) {
+        throw Exception('Booking succeeded but no tickets were returned by the server.');
+      }
+
+      // Verify payment (backend: pending -> confirmed).
+      final method = _selectedMethod == 0 ? 'card' : 'wallet';
+      final transactionId = paymentId;
+      for (final t in bookingResult.tickets) {
+        await _ticketRepo.confirmPayment(
+          token: token,
+          ticketId: t.id,
+          paymentMethod: method,
+          transactionId: transactionId,
+        );
+      }
+
+      // Refresh "My Bookings" so tickets show up immediately.
+      try {
+        await context.read<MyBookingsViewModel>().load();
+      } catch (_) {}
+
+      // Confirmation UI: show a simple summary using the first ticket id.
+      final bookingId = 'T-${bookingResult.tickets.first.id}';
+      final seats = widget.seats ?? ['A1'];
+      final booking = <String, dynamic>{
+        'id': bookingId,
+        'movieTitle': widget.movieTitle ?? 'Movie',
+        'dateTime': widget.dateTime ?? 'Selected Showtime',
+        'cinema': widget.cinema ?? 'CineWay',
+        'seats': seats.join(', '),
+        'ticketIds': bookingResult.tickets.map((e) => e.id).toList(),
+      };
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment verified')));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => BookingConfirmationScreen(booking: booking)),
+      );
+    } catch (e) {
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_error!)));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isPaying = false);
+      }
+    }
   }
 
   Widget _methodTile({required IconData icon, required String title, required String subtitle, required int index}) {
@@ -159,6 +244,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
 
               const SizedBox(height: 18),
+              if (_error != null) ...[
+                Text(_error!, style: const TextStyle(color: Colors.redAccent)),
+                const SizedBox(height: 12),
+              ],
               const Text('Select Payment Method', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
               const SizedBox(height: 12),
               _methodTile(icon: Icons.credit_card, title: 'Credit / Debit Card', subtitle: 'Visa, Mastercard, Amex', index: 0),
@@ -241,9 +330,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _pay,
+                  onPressed: _isPaying ? null : _pay,
                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.dodgerBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  child: Text('Pay \$${_amount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w700)),
+                  child: Text(
+                    _isPaying ? 'Processing…' : 'Pay \$${_amount.toStringAsFixed(2)}',
+                    style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],

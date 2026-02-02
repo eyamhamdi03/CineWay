@@ -17,6 +17,9 @@ import 'screens/booking_confirmation_screen.dart';
 import 'repository/movie_repository.dart';
 import 'repository/cinema_repository.dart';
 import 'repository/auth_repository.dart';
+import 'repository/seat_repository.dart';
+import 'repository/showtime_api_repository.dart';
+import 'repository/ticket_repository.dart';
 
 import 'viewmodel/movie/movie_detail_viewmodel.dart';
 import 'viewmodel/search_viewmodel.dart';
@@ -27,6 +30,8 @@ import 'services/local_storage.dart';
 import 'viewmodel/settings/settings_viewmodel.dart';
 import 'viewmodel/session/session_viewmodel.dart';
 import 'viewmodel/bookings/bookings_viewmodel.dart';
+import 'viewmodel/bookings/my_bookings_viewmodel.dart';
+import 'viewmodel/bookings/bookings_summary_viewmodel.dart';
 
 void main() {
   final storage = LocalStorage();
@@ -39,6 +44,21 @@ void main() {
         ChangeNotifierProvider(create: (_) => SettingsViewModel(storage)..load()),
         ChangeNotifierProvider(create: (_) => SessionViewModel(storage)..load()),
         ChangeNotifierProvider(create: (_) => BookingsViewModel(storage)..load()),
+        ChangeNotifierProvider(
+          create: (context) => MyBookingsViewModel(
+            ticketRepository: TicketRepository(),
+            session: context.read<SessionViewModel>(),
+          )..load(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => BookingsSummaryViewModel(
+            session: context.read<SessionViewModel>(),
+            ticketRepo: TicketRepository(),
+            showtimeRepo: ShowtimeApiRepository(),
+            seatRepo: SeatRepository(),
+            movieRepo: MovieRepository(),
+          )..load(),
+        ),
         ChangeNotifierProvider(
           create: (context) => AuthViewModel(
             authRepository: AuthRepository(),

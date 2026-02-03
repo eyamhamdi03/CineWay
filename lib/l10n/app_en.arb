@@ -1,5 +1,10 @@
 {
   "@@locale": "en",
+  "app_name": "CineWay",
+  "app_description": "CineWay - Your Ultimate Movie Guide",
+  "app_tagline": "Book your cinema tickets easily and quickly",
+  "about_description": "CineWay is a revolutionary mobile application that allows you to discover the latest movies, check showtimes and book your cinema seats in just a few clicks. With CineWay, enjoy a seamless booking experience, access to the best cinemas near you and exclusive promotions.",
+  "app_features": "Discover popular movies • Check showtimes • Reserve your seats • Easy payment management • Booking history • Light and dark mode • Multilingual support",
   "profile_title": "Profile",
   "dark_mode": "Dark Mode",
   "dark_mode_sub": "Toggle app theme",

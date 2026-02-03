@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../core/colors.dart';
-import '../services/app_state.dart';
 import 'ticket_details_screen.dart';
 
 class BookingsScreen extends StatefulWidget {
@@ -13,46 +11,42 @@ class BookingsScreen extends StatefulWidget {
 
 class _BookingsScreenState extends State<BookingsScreen> {
   int _tabIndex = 0; // 0 upcoming, 1 past
-
-  // Mock booking data
-  final List<Map<String, dynamic>> _mockUpcoming = [
+  final List<Map<String, dynamic>> _staticUpcoming = [
     {
-      'id': '1',
-      'movieTitle': 'Dune: Part Two',
-      'genre': 'Sci-Fi',
-      'duration': '2h 46m',
-      'dateTime': 'Today, 19:30',
-      'cinema': 'CineWay IMAX, Hall 4',
-      'seats': 'F12, F13',
-      'posterUrl': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBULZ3LdqB6oEn_KmAgpjihrkHviSuwW_kSza6oXRaSKo2J7cZDUgDVAAsiVTZ33wGtKnJosT_YnAIF7olMCf52RLZRO4fSmp7Ilua3oBeWTHD7DakPmXYv2kxlJaWEJa5s8bnQNY9LWdkv-Vp9faYrdy61qw1OQKzGj5QFmoHR8TBjaVacpvnwW3fzcOT8LQc8zLpSGCgMHxg_nM36vaeSuIwPxg6QnuLR1-AjvkAWAIZUGxz0f19efBlvDqMigH0Qmq6SEjVNt4M',
-      'isPast': false,
-    },
-    {
-      'id': '2',
-      'movieTitle': 'Cyber War 2077',
-      'genre': 'Action',
-      'duration': '2h 15m',
-      'dateTime': 'Fri, 24 Oct • 21:00',
-      'cinema': 'CineWay Downtown',
-      'seats': 'H04, H05, H06',
-      'posterUrl': 'https://lh3.googleusercontent.com/aida-public/AB6AXuByWDGGxTKlD6ZFqFXERbzABFDabFK9kSDtF-clLZyMFBl76AuuZwnCu0D1Oo8EXaS_qzCh59bdRXRXLhQdj5CsZjzvY_AesUuImOoOIGWQv5PARLW57Qkx4zNRW4mHKPkJGrGInHqesfinreS1X2JSUiqwXYDz2mv2D6r6XRXYQiItLm1JgPjzxkoyHoujhS3mE1wfIH7rLHwobUQjfoDnUktNIMO9bU2_qM8L6PeVZ_Vga7QMZbrESfY2zyZyXU4EVkWPX-D-jAU',
-      'isPast': false,
-    },
-  ];
-
-  final List<Map<String, dynamic>> _mockPast = [
-    {
-      'id': '3',
+      'posterUrl': 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg',
       'movieTitle': 'Inception',
-      'genre': 'Sci-Fi',
+      'genre': 'Sci‑Fi',
       'duration': '2h 28m',
-      'dateTime': 'Sun, 15 Oct • 18:00',
-      'cinema': 'CineWay Central',
-      'seats': 'D05, D06',
-      'posterUrl': 'https://via.placeholder.com/96x144?text=Inception',
-      'isPast': true,
+      'dateTime': '2026-02-05 • 7:30 PM',
+      'cinema': 'Mega Cinema Tunis',
+      'seats': 'A2',
+    },
+    {
+      'posterUrl': 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+      'movieTitle': 'The Matrix',
+      'genre': 'Sci‑Fi',
+      'duration': '2h 16m',
+      'dateTime': '2026-02-08 • 9:00 PM',
+      'cinema': 'Pathé Palace',
+      'seats': 'C4, C5',
     },
   ];
+  final List<Map<String, dynamic>> _staticPast = [
+    {
+      'posterUrl': 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
+      'movieTitle': 'The Dark Knight',
+      'genre': 'Action',
+      'duration': '2h 32m',
+      'dateTime': '2026-01-20 • 5:00 PM',
+      'cinema': 'Ciné Carthage',
+      'seats': 'B7',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   Widget _buildTabBar() {
     return Container(
@@ -115,6 +109,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
       ),
     );
   }
+
 
   Widget _buildTicketCard(Map<String, dynamic> booking, bool isUpcoming) {
     return Container(
@@ -303,7 +298,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final data = _tabIndex == 0 ? _mockUpcoming : _mockPast;
+    final data = _tabIndex == 0 ? _staticUpcoming : _staticPast;
     final isEmpty = data.isEmpty;
 
     return Scaffold(
@@ -313,14 +308,6 @@ class _BookingsScreenState extends State<BookingsScreen> {
         elevation: 0,
         title: const Text('My Bookings', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history_outlined),
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Booking history')),
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -338,10 +325,12 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          "You're all caught up!",
-                          style: TextStyle(
+                          _tabIndex == 0
+                              ? "No upcoming bookings"
+                              : "No past bookings",
+                          style: const TextStyle(
                             fontSize: 16,
-                            color: const Color(0xFF9CABBA),
+                            color: Color(0xFF9CABBA),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -351,7 +340,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 : ListView.builder(
                     padding: const EdgeInsets.only(top: 8, bottom: 24),
                     itemCount: data.length,
-                    itemBuilder: (context, index) => _buildTicketCard(data[index], _tabIndex == 0),
+                    itemBuilder: (context, index) {
+                      final booking = data[index];
+                      return _buildTicketCard(booking, _tabIndex == 0);
+                    },
                   ),
           ),
         ],

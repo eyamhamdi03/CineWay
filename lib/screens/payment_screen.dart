@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/colors.dart';
 import '../services/app_state.dart';
+import '../repository/ticket_repository.dart';
+import '../viewmodel/session/session_viewmodel.dart';
 import 'booking_confirmation_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -10,8 +12,19 @@ class PaymentScreen extends StatefulWidget {
   final String? movieTitle;
   final String? cinema;
   final String? dateTime;
+  final List<int>? reservationIds;
+  final int? screeningId;
 
-  const PaymentScreen({super.key, this.seats, this.amount, this.movieTitle, this.cinema, this.dateTime});
+  const PaymentScreen({
+    super.key,
+    this.seats,
+    this.amount,
+    this.movieTitle,
+    this.cinema,
+    this.dateTime,
+    this.reservationIds,
+    this.screeningId,
+  });
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -19,7 +32,7 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController(text: 'John Doe');
+  final TextEditingController _nameController = TextEditingController(text: 'Amin Chabbah');
   final TextEditingController _cardController = TextEditingController(text: '**** **** **** 1234');
   final TextEditingController _expiryController = TextEditingController();
   final TextEditingController _cvvController = TextEditingController();
@@ -46,24 +59,42 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   void _selectMethod(int index) => setState(() => _selectedMethod = index);
 
-  void _pay() {
+  void _pay() async {
     if (_selectedMethod == 0) {
-      // If card selected, require form valid
       if (!_formKey.currentState!.validate()) return;
     }
-    // Demo success: create booking and navigate to confirmation
-    final bookingId = 'CW-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
-    final seats = widget.seats ?? ['A1'];
-    final booking = Booking(id: bookingId, movieTitle: widget.movieTitle ?? 'Movie', dateTime: widget.dateTime ?? 'Today • 7:30 PM', cinema: widget.cinema ?? 'CineWay', seats: seats.join(', '));
+    
+    try {
+      final session = context.read<SessionViewModel>();
+      final token = session.accessToken;
+      
+      if (token == null || token.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please sign in first')));
+        return;
+      }
+      
+      // Create booking locally
+      final bookingId = 'CW-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+      final seats = widget.seats ?? ['A1'];
+      final booking = Booking(
+        id: bookingId,
+        movieTitle: widget.movieTitle ?? 'Movie',
+        dateTime: widget.dateTime ?? 'Today • 7:30 PM',
+        cinema: widget.cinema ?? 'CineWay',
+        seats: seats.join(', ')
+      );
 
-    // add to AppState
-    Provider.of<AppState>(context, listen: false).addBooking(booking);
+      // Add to AppState
+      Provider.of<AppState>(context, listen: false).addBooking(booking);
 
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment successful')));
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => BookingConfirmationScreen(booking: booking)),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment successful')));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => BookingConfirmationScreen(booking: booking)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment failed: $e')));
+    }
   }
 
   Widget _methodTile({required IconData icon, required String title, required String subtitle, required int index}) {

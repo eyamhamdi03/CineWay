@@ -196,7 +196,9 @@ class _MainNavigatorState extends State<MainNavigator>
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
       bottomNavigationBar: BottomAppBar(
-        color: const Color(0xFF1A1A1A),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1A1A1A)
+            : Colors.white,
         shape: const CircularNotchedRectangle(),
         notchMargin: 10,
         height: 64 + bottomInset,
@@ -206,12 +208,12 @@ class _MainNavigatorState extends State<MainNavigator>
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             child: Row(
               children: [
-                _buildNavItem(Icons.home_outlined, Icons.home, 'Home', 0, showLabels),
-                _buildNavItem(Icons.theaters_outlined, Icons.theaters, 'Cinemas', 1, showLabels),
+                _buildNavItem(context, Icons.home_outlined, Icons.home, 'Home', 0, showLabels),
+                _buildNavItem(context, Icons.theaters_outlined, Icons.theaters, 'Cinemas', 1, showLabels),
                 const SizedBox(width: 56),
-                _buildNavItem(Icons.confirmation_number_outlined,
+                _buildNavItem(context, Icons.confirmation_number_outlined,
                     Icons.confirmation_number, 'Tickets', 3, showLabels),
-                _buildNavItem(Icons.person_outline, Icons.person, 'Profile', 4, showLabels),
+                _buildNavItem(context, Icons.person_outline, Icons.person, 'Profile', 4, showLabels),
               ],
             ),
           ),
@@ -221,6 +223,7 @@ class _MainNavigatorState extends State<MainNavigator>
   }
 
   Widget _buildNavItem(
+    BuildContext context,
     IconData icon,
     IconData selectedIcon,
     String label,
@@ -228,6 +231,9 @@ class _MainNavigatorState extends State<MainNavigator>
     bool showLabel,
   ) {
     final isSelected = _selectedIndex == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedColor = const Color(0xFF4FC3F7);
+    final unselectedColor = isDark ? const Color(0xFF7A7A7A) : const Color(0xFF64748B);
 
     return Expanded(
       child: InkWell(
@@ -240,9 +246,7 @@ class _MainNavigatorState extends State<MainNavigator>
             Icon(
               isSelected ? selectedIcon : icon,
               size: 24,
-              color: isSelected
-                  ? const Color(0xFF4FC3F7)
-                  : const Color(0xFF7A7A7A),
+              color: isSelected ? selectedColor : unselectedColor,
             ),
             if (showLabel)
               Padding(
@@ -254,9 +258,7 @@ class _MainNavigatorState extends State<MainNavigator>
                   style: TextStyle(
                     fontSize: 10,
                     height: 1.1,
-                    color: isSelected
-                        ? const Color(0xFF4FC3F7)
-                        : const Color(0xFF7A7A7A),
+                    color: isSelected ? selectedColor : unselectedColor,
                     fontWeight:
                         isSelected ? FontWeight.w600 : FontWeight.w500,
                   ),

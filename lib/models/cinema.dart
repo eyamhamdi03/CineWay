@@ -1,4 +1,3 @@
-import 'movie.dart';
 import 'review.dart';
 
 class Cinema {

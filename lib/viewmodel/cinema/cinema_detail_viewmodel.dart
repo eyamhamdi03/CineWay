@@ -35,7 +35,7 @@ class CinemaDetailViewModel extends ChangeNotifier {
 
     for (var mId in screeningMovieIds) {
       final movie = await movieRepo.getMovieById(mId);
-      if (movie != null) nowShowing.add(movie);
+      nowShowing.add(movie);
     }
 
     isLoading = false;

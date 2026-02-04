@@ -2,7 +2,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../models/movie.dart';
-import '../data/mock_movies.dart';
 import '../config/api_config.dart';
 
 class MovieRepository {
@@ -10,9 +9,7 @@ class MovieRepository {
 
   // Get all movies
   Future<List<Movie>> getAllMovies() async {
-
-     final response = await http.get(Uri.parse("$baseUrl/movies"));
-     final data = jsonDecode(response.body);
+      final response = await http.get(Uri.parse("$baseUrl/movies"));
      if (response.statusCode == 200) {
        final data = jsonDecode(response.body);
 

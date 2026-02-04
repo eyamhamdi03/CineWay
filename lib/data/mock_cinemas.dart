@@ -1,6 +1,4 @@
 import '../models/cinema.dart';
-import '../models/movie.dart';
-import 'mock_movies.dart';
 
 final List<Cinema> mockCinemas = [
   Cinema(

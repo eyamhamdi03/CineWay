@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/colors.dart';
 import '../services/app_state.dart';
-import '../repository/ticket_repository.dart';
 import '../viewmodel/session/session_viewmodel.dart';
 import 'booking_confirmation_screen.dart';
 
@@ -41,6 +40,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   bool _saveCard = true;
 
   late double _amount;
+  bool _isPaying = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -56,7 +57,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
     super.initState();
     _amount = widget.amount ?? 25.50;
   }
-
   void _selectMethod(int index) => setState(() => _selectedMethod = index);
 
   void _pay() async {
@@ -190,6 +190,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
 
               const SizedBox(height: 18),
+              if (_error != null) ...[
+                Text(_error!, style: const TextStyle(color: Colors.redAccent)),
+                const SizedBox(height: 12),
+              ],
               const Text('Select Payment Method', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
               const SizedBox(height: 12),
               _methodTile(icon: Icons.credit_card, title: 'Credit / Debit Card', subtitle: 'Visa, Mastercard, Amex', index: 0),
@@ -272,9 +276,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _pay,
+                  onPressed: _isPaying ? null : _pay,
                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.dodgerBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  child: Text('Pay \$${_amount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w700)),
+                  child: Text(
+                    _isPaying ? 'Processing…' : 'Pay \$${_amount.toStringAsFixed(2)}',
+                    style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],

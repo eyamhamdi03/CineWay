@@ -37,7 +37,7 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _authRepository.signUp(email, password);
+      await _authRepository.signUp(email, password);
       // After registration, perform a login to obtain access token and profile
       // data (the register endpoint does not return a token).
       final loginResult = await _authRepository.signIn(email, password);

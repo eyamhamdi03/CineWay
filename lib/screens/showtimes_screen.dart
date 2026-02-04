@@ -240,11 +240,9 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => SelectSeatsScreen(
-          showtimeId: item.showtimeId,
           movieTitle: widget.movieTitle,
           cinema: cinemaName,
           dateTime: '${date.toIso8601String().split('T').first} • ${_formatTime(item.time)}',
-          ticketCount: 2,
         ),
       ),
     );

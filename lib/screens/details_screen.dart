@@ -1,5 +1,4 @@
 import 'package:cineway/core/colors.dart';
-import 'package:cineway/screens/reviews_screen.dart';
 import 'package:cineway/screens/showtimes_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/movie.dart';
 import '../models/review.dart';
 import '../viewmodel/movie/movie_detail_viewmodel.dart';
-import '../viewmodel/movie/movie_review_viewmodel.dart';
 
 class MovieDetailsScreen extends StatefulWidget {
   final int movieId;

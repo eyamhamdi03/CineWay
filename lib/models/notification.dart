@@ -1,5 +1,5 @@
 class AppNotification {
-  final String id;
+  final int id;
   final String title;
   final String message;
   final String type; // 'booking', 'rating', 'movie_release', 'promo', 'payment'
@@ -21,13 +21,13 @@ class AppNotification {
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     return AppNotification(
-      id: json['id'] ?? '',
+      id: json['id'] ?? 0,
       title: json['title'] ?? '',
       message: json['message'] ?? '',
       type: json['type'] ?? 'booking',
-      isRead: json['isRead'] ?? false,
+      isRead: json['is_read'] ?? false,
       timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
-      movieOrCinemaName: json['movieOrCinemaName'],
+      movieOrCinemaName: json['movie_or_cinema_name'],
       icon: json['icon'],
     );
   }
@@ -38,9 +38,9 @@ class AppNotification {
       'title': title,
       'message': message,
       'type': type,
-      'isRead': isRead,
+      'is_read': isRead,
       'timestamp': timestamp.toIso8601String(),
-      'movieOrCinemaName': movieOrCinemaName,
+      'movie_or_cinema_name': movieOrCinemaName,
       'icon': icon,
     };
   }

@@ -1,5 +1,10 @@
 {
   "@@locale": "fr",
+  "app_name": "CineWay",
+  "app_description": "CineWay - Votre guide ultime pour le cinéma",
+  "app_tagline": "Réservez vos billets de cinéma facilement et rapidement",
+  "about_description": "CineWay est une application mobile révolutionnaire qui vous permet de découvrir les derniers films, de consulter les horaires des séances et de réserver vos places de cinéma en quelques clics. Avec CineWay, profitez d'une expérience de réservation fluide, d'accès aux meilleures salles de cinéma près de vous et de promotions exclusives.",
+  "app_features": "Découvrez les films populaires • Consultez les horaires des séances • Réservez vos sièges • Gestion facile des paiements • Historique de vos réservations • Mode clair et sombre • Support multilingue",
   "profile_title": "Profil",
   "dark_mode": "Mode sombre",
   "dark_mode_sub": "Basculer le thème de l'application",

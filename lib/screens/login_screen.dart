@@ -1,9 +1,7 @@
-import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../core/colors.dart';
 import '../viewmodel/auth_view_model.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
@@ -22,7 +20,6 @@ class _LoginScreenState extends State<LoginScreen>
   final TextEditingController _passwordController = TextEditingController();
 
   AnimationController? _glowController;
-  Animation<double>? _glowScale;
 
   Future<void> _handleSignIn(AuthViewModel authViewModel) async {
     if (!_formKey.currentState!.validate()) return;
@@ -69,9 +66,6 @@ class _LoginScreenState extends State<LoginScreen>
     )..repeat(reverse: true);
 
     _glowController = controller;
-    _glowScale = Tween<double>(begin: 0.9, end: 1.1).animate(
-      CurvedAnimation(parent: controller, curve: Curves.easeInOut),
-    );
   }
 
   @override

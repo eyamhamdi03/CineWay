@@ -2,7 +2,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../models/cinema.dart';
-import '../data/mock_cinemas.dart';
 import '../config/api_config.dart';
 
 class CinemaRepository {

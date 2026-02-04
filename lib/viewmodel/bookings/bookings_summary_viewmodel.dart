@@ -58,7 +58,7 @@ class BookingsSummaryViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final tickets = await _ticketRepo.getMyTickets(token: token);
+      final tickets = await _ticketRepo.getMyTickets(token);
       _items = await _buildSummaries(tickets);
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');

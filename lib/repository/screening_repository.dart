@@ -35,4 +35,17 @@ class ScreeningRepository {
     final movieIds = screenings.map((s) => s.movieId).toSet().toList();
     return movieIds;
   }
+
+  // Get screening by ID
+  Future<Screening> getScreeningById(int screeningId) async {
+    final uri = Uri.parse("$baseUrl/screenings/$screeningId");
+    final response = await http.get(uri);
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return Screening.fromJson(data);
+    } else {
+      throw Exception('Failed to load screening: ${response.statusCode}');
+    }
+  }
 }

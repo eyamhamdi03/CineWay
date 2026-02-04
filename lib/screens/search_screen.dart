@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-import '../viewmodel/search_viewmodel.dart';
 import '../core/colors.dart';
 import '../models/movie.dart';
 import '../models/cinema.dart';
@@ -478,7 +476,7 @@ class _SearchScreenState extends State<SearchScreen> {
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
             ),
             Text(
-              '${movie.categories.isNotEmpty ? movie.categories.first : "Movie"} • ${movie.duration ?? "2h"}',
+              '${movie.categories.isNotEmpty ? movie.categories.first : "Movie"} • ${movie.duration}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5)),

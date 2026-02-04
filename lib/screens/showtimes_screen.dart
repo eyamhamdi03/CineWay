@@ -123,7 +123,7 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
 
   String _monthLabel(int month) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months[(month - 1).clamp(0, 11) as int];
+    return months[(month - 1).clamp(0, 11)];
   }
 
   String _formatTime(DateTime dt) {
@@ -243,8 +243,6 @@ class _ShowtimesScreenState extends State<ShowtimesScreen> {
           movieTitle: widget.movieTitle,
           cinema: cinemaName,
           dateTime: '${date.toIso8601String().split('T').first} • ${_formatTime(item.time)}',
-          showtimeId: item.showtimeId,
-          ticketCount: 2,
         ),
       ),
     );

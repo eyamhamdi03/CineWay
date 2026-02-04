@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/colors.dart';
-import '../repository/seat_reservation_repository.dart';
-import '../repository/ticket_repository.dart';
+import '../services/app_state.dart';
 import '../viewmodel/session/session_viewmodel.dart';
-import '../viewmodel/bookings/my_bookings_viewmodel.dart';
 import 'booking_confirmation_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -33,7 +31,7 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController(text: 'John Doe');
+  final TextEditingController _nameController = TextEditingController(text: 'Amin Chabbah');
   final TextEditingController _cardController = TextEditingController(text: '**** **** **** 1234');
   final TextEditingController _expiryController = TextEditingController();
   final TextEditingController _cvvController = TextEditingController();
@@ -44,10 +42,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
   late double _amount;
   bool _isPaying = false;
   String? _error;
-
-  // Uses reservation-based booking, same as Angular.
-  final _seatRepo = SeatReservationRepository();
-  final _ticketRepo = TicketRepository();
 
   @override
   void dispose() {
@@ -65,89 +59,41 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
   void _selectMethod(int index) => setState(() => _selectedMethod = index);
 
-  void _pay() {
-    if (_isPaying) return;
+  void _pay() async {
     if (_selectedMethod == 0) {
-      // If card selected, require form valid
       if (!_formKey.currentState!.validate()) return;
     }
-    _payAndBook();
-  }
-
-  Future<void> _payAndBook() async {
-    setState(() {
-      _isPaying = true;
-      _error = null;
-    });
-
+    
     try {
       final session = context.read<SessionViewModel>();
       final token = session.accessToken;
-      final reservationIds = widget.reservationIds ?? const <int>[];
+      
       if (token == null || token.isEmpty) {
-        throw Exception('You must be signed in to complete booking');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please sign in first')));
+        return;
       }
-      if (reservationIds.isEmpty) {
-        throw Exception('No reservation ids found. Please go back and select seats again.');
-      }
-
-      final paymentId = 'demo-${DateTime.now().millisecondsSinceEpoch}';
-      final bookingResult = await _seatRepo.bookFromReservation(
-        reservationIds: reservationIds,
-        paymentId: paymentId,
-        token: token,
+      
+      // Create booking locally
+      final bookingId = 'CW-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+      final seats = widget.seats ?? ['A1'];
+      final booking = Booking(
+        id: bookingId,
+        movieTitle: widget.movieTitle ?? 'Movie',
+        dateTime: widget.dateTime ?? 'Today • 7:30 PM',
+        cinema: widget.cinema ?? 'CineWay',
+        seats: seats.join(', ')
       );
 
-      if (bookingResult.tickets.isEmpty) {
-        throw Exception('Booking succeeded but no tickets were returned by the server.');
-      }
+      // Add to AppState
+      Provider.of<AppState>(context, listen: false).addBooking(booking);
 
-      // Verify payment (backend: pending -> confirmed).
-      final method = _selectedMethod == 0 ? 'card' : 'wallet';
-      final transactionId = paymentId;
-      for (final t in bookingResult.tickets) {
-        await _ticketRepo.confirmPayment(
-          token: token,
-          ticketId: t.id,
-          paymentMethod: method,
-          transactionId: transactionId,
-        );
-      }
-
-      // Refresh "My Bookings" so tickets show up immediately.
-      try {
-        await context.read<MyBookingsViewModel>().load();
-      } catch (_) {}
-
-      // Confirmation UI: show a simple summary using the first ticket id.
-      final bookingId = 'T-${bookingResult.tickets.first.id}';
-      final seats = widget.seats ?? ['A1'];
-      final booking = <String, dynamic>{
-        'id': bookingId,
-        'movieTitle': widget.movieTitle ?? 'Movie',
-        'dateTime': widget.dateTime ?? 'Selected Showtime',
-        'cinema': widget.cinema ?? 'CineWay',
-        'seats': seats.join(', '),
-        'ticketIds': bookingResult.tickets.map((e) => e.id).toList(),
-      };
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment verified')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment successful')));
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => BookingConfirmationScreen(booking: booking)),
       );
     } catch (e) {
-      setState(() {
-        _error = e.toString().replaceFirst('Exception: ', '');
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_error!)));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isPaying = false);
-      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment failed: $e')));
     }
   }
 

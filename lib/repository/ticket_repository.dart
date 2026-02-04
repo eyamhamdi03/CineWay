@@ -1,69 +1,116 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:http/http.dart' as http;
-
 import '../config/api_config.dart';
 import '../models/ticket.dart';
 
 class TicketRepository {
-  String get _baseUrl => ApiConfig.baseUrl;
+  final String baseUrl = ApiConfig.baseUrl;
 
-  Map<String, String> _headers(String token) => {
-        'Authorization': 'Bearer $token',
-      };
-
-  /// GET /tickets/my-tickets
-  Future<List<Ticket>> getMyTickets({required String token}) async {
-    final uri = Uri.parse('$_baseUrl/tickets/my-tickets');
-    final resp = await http.get(uri, headers: _headers(token));
-
-    if (resp.statusCode != 200) {
-      throw HttpException('Failed to load my tickets: ${resp.statusCode} ${resp.body}');
-    }
-
-    final decoded = jsonDecode(resp.body);
-    if (decoded is! List) {
-      throw const FormatException('Unexpected my-tickets response shape');
-    }
-
-    return decoded
-        .whereType<Map<String, dynamic>>()
-        .map(Ticket.fromJson)
-        .toList();
-  }
-
-  /// POST /tickets/{ticket_id}/confirm-payment
-  ///
-  /// Confirms payment for a ticket (moves status from pending -> confirmed).
-  Future<Ticket> confirmPayment({
-    required String token,
-    required int ticketId,
-    required String paymentMethod,
-    String? transactionId,
-  }) async {
-    final uri = Uri.parse('$_baseUrl/tickets/$ticketId/confirm-payment');
-    final resp = await http.post(
+  /// Get all tickets for the current user
+  Future<List<Ticket>> getMyTickets(String token) async {
+    final uri = Uri.parse('$baseUrl/tickets/my-tickets');
+    final response = await http.get(
       uri,
       headers: {
-        ..._headers(token),
+        'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode(<String, dynamic>{
-        'payment_method': paymentMethod,
-        if (transactionId != null && transactionId.isNotEmpty) 'transaction_id': transactionId,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load tickets: ${response.statusCode} ${response.body}');
+    }
+
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.map((json) => Ticket.fromJson(json)).toList();
+  }
+
+  /// Get a specific ticket by ID
+  Future<Ticket> getTicket(int ticketId, String token) async {
+    final uri = Uri.parse('$baseUrl/tickets/$ticketId');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load ticket: ${response.statusCode} ${response.body}');
+    }
+
+    final data = jsonDecode(response.body);
+    return Ticket.fromJson(data);
+  }
+
+  /// Book tickets for a screening
+  Future<List<Ticket>> bookTickets({
+    required int screeningId,
+    required List<int> seatIds,
+    required String token,
+  }) async {
+    final uri = Uri.parse('$baseUrl/tickets/book');
+    final response = await http.post(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'screening_id': screeningId,
+        'seat_ids': seatIds,
       }),
     );
 
-    if (resp.statusCode != 200) {
-      throw HttpException('Failed to confirm payment: ${resp.statusCode} ${resp.body}');
+    if (response.statusCode != 201) {
+      throw Exception('Failed to book tickets: ${response.statusCode} ${response.body}');
     }
 
-    final decoded = jsonDecode(resp.body);
-    if (decoded is! Map<String, dynamic>) {
-      throw const FormatException('Unexpected confirm-payment response shape');
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.map((json) => Ticket.fromJson(json)).toList();
+  }
+
+  /// Cancel a ticket
+  Future<void> cancelTicket(int ticketId, String token) async {
+    final uri = Uri.parse('$baseUrl/tickets/$ticketId');
+    final response = await http.delete(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception('Failed to cancel ticket: ${response.statusCode} ${response.body}');
     }
-    return Ticket.fromJson(decoded);
+  }
+
+  /// Confirm payment for a ticket
+  Future<Ticket> confirmPayment({
+    required int ticketId,
+    required String paymentMethod,
+    String? transactionId,
+    required String token,
+  }) async {
+    final uri = Uri.parse('$baseUrl/tickets/$ticketId/confirm-payment');
+    final response = await http.post(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'payment_method': paymentMethod,
+        if (transactionId != null) 'transaction_id': transactionId,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to confirm payment: ${response.statusCode} ${response.body}');
+    }
+
+    final data = jsonDecode(response.body);
+    return Ticket.fromJson(data);
   }
 }
-

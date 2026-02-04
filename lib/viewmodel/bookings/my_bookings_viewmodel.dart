@@ -44,7 +44,7 @@ class MyBookingsViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _tickets = await _ticketRepository.getMyTickets(token: token);
+      _tickets = await _ticketRepository.getMyTickets(token);
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
       _tickets = const [];

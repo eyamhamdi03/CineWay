@@ -4,7 +4,6 @@ import '../../models/cinema.dart';
 import '../../repository/cinema_repository.dart';
 import '../../repository/screening_repository.dart';
 import '../gps/gps_viewmodel.dart';
-import '../../models/movie.dart';
 import '../../repository/movie_repository.dart';
 
 class CinemaListViewModel extends ChangeNotifier {

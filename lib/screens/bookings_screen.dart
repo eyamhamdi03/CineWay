@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../core/colors.dart';
 import 'ticket_details_screen.dart';
-import '../viewmodel/bookings/bookings_summary_viewmodel.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
@@ -13,14 +11,41 @@ class BookingsScreen extends StatefulWidget {
 
 class _BookingsScreenState extends State<BookingsScreen> {
   int _tabIndex = 0; // 0 upcoming, 1 past
+  final List<Map<String, dynamic>> _staticUpcoming = [
+    {
+      'posterUrl': 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg',
+      'movieTitle': 'Inception',
+      'genre': 'Sci‑Fi',
+      'duration': '2h 28m',
+      'dateTime': '2026-02-05 • 7:30 PM',
+      'cinema': 'Mega Cinema Tunis',
+      'seats': 'A2',
+    },
+    {
+      'posterUrl': 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+      'movieTitle': 'The Matrix',
+      'genre': 'Sci‑Fi',
+      'duration': '2h 16m',
+      'dateTime': '2026-02-08 • 9:00 PM',
+      'cinema': 'Pathé Palace',
+      'seats': 'C4, C5',
+    },
+  ];
+  final List<Map<String, dynamic>> _staticPast = [
+    {
+      'posterUrl': 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
+      'movieTitle': 'The Dark Knight',
+      'genre': 'Action',
+      'duration': '2h 32m',
+      'dateTime': '2026-01-20 • 5:00 PM',
+      'cinema': 'Ciné Carthage',
+      'seats': 'B7',
+    },
+  ];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      context.read<BookingsSummaryViewModel>().load();
-    });
   }
 
   Widget _buildTabBar() {
@@ -84,6 +109,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
       ),
     );
   }
+
 
   Widget _buildTicketCard(Map<String, dynamic> booking, bool isUpcoming) {
     return Container(
@@ -213,35 +239,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<BookingsSummaryViewModel>();
-    final now = DateTime.now();
-
-    final items = vm.items
-        .where((b) {
-      final isUpcoming = b.screeningTime.isAfter(now);
-      return _tabIndex == 0 ? isUpcoming : !isUpcoming;
-    })
-        .toList()
-      ..sort((a, b) {
-        if (_tabIndex == 0) {
-          return a.screeningTime.compareTo(b.screeningTime);
-        } else {
-          return b.screeningTime.compareTo(a.screeningTime);
-        }
-      });
-
-    final data = items.map((b) {
-      return {
-        'id': b.screeningId.toString(),
-        'movieTitle': b.movieTitle,
-        'posterUrl': b.posterUrl,
-        'genre': b.status,
-        'dateTime': b.screeningTime.toLocal().toString(),
-        'cinema': b.roomName,
-        'seats': b.seats.join(', '),
-        'screeningId': b.screeningId,
-      };
-    }).toList();
+    final data = _tabIndex == 0 ? _staticUpcoming : _staticPast;
+    final isEmpty = data.isEmpty;
 
     return Scaffold(
       backgroundColor: const Color(0xFF101922),
@@ -249,18 +248,44 @@ class _BookingsScreenState extends State<BookingsScreen> {
         backgroundColor: const Color(0xFF101922),
         elevation: 0,
         title: const Text('My Bookings', style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: false,
       ),
       body: Column(
         children: [
           _buildTabBar(),
           Expanded(
-            child: vm.loading
-                ? const Center(child: CircularProgressIndicator())
+            child: isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.confirmation_number_outlined,
+                          size: 64,
+                          color: const Color(0xFF3B4754).withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _tabIndex == 0
+                              ? "No upcoming bookings"
+                              : "No past bookings",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF9CABBA),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 : ListView.builder(
-              itemCount: data.length,
-              itemBuilder: (context, index) =>
-                  _buildTicketCard(data[index], _tabIndex == 0),
-            ),
+                    padding: const EdgeInsets.only(top: 8, bottom: 24),
+                    itemCount: data.length,
+                    itemBuilder: (context, index) {
+                      final booking = data[index];
+                      return _buildTicketCard(booking, _tabIndex == 0);
+                    },
+                  ),
           ),
         ],
       ),

@@ -45,15 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  List<Movie> get _nowInCinemas {
-    final today = DateTime.now();
-    return _allMovies.where((m) {
-      final d = m.releaseDate;
-      if (d == null) return true;
-      return !d.isAfter(DateTime(today.year, today.month, today.day));
-    }).toList();
-  }
-
   List<Movie> get _filteredMovies {
     final selectedCategory = _categories[_selectedCategoryIndex];
     
@@ -342,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                           const Icon(Icons.star, color: Color(0xFFFFC107), size: 14),
                                                           const SizedBox(width: 4),
                                                           Text(
-                                                            (movie.rating is String ? double.tryParse(movie.rating as String) : movie.rating as double?)?.toStringAsFixed(1) ?? '4.5',
+                                                            movie.rating.toString(),
                                                             style: const TextStyle(
                                                               color: Colors.white,
                                                               fontSize: 12,
@@ -368,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                '${movie.categories.isNotEmpty ? movie.categories.first : 'Movie'} • ${movie.duration ?? '2h 10m'}',
+                                                '${movie.categories.isNotEmpty ? movie.categories.first : 'Movie'} • ${movie.duration}',
                                                 style: const TextStyle(
                                                   color: Color(0xFFB0B0B0),
                                                   fontSize: 14,
@@ -519,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       const Icon(Icons.star, color: Color(0xFFFFC107), size: 16),
                                                       const SizedBox(width: 4),
                                                       Text(
-                                                        (movie.rating is String ? double.tryParse(movie.rating as String) : movie.rating as double?)?.toStringAsFixed(1) ?? '4.5',
+                                                        movie.rating.toString(),
                                                         style: const TextStyle(
                                                           color: Color(0xFFF5F5F5),
                                                           fontSize: 14,
@@ -542,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       ),
                                                       const SizedBox(width: 8),
                                                       Text(
-                                                        movie.duration ?? '1h 42m',
+                                                        movie.duration,
                                                         style: const TextStyle(
                                                           color: Color(0xFFB0B0B0),
                                                           fontSize: 12,

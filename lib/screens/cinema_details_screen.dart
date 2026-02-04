@@ -21,6 +21,7 @@ class _CinemaDetailsScreenState extends State<CinemaDetailsScreen> {
   late final _repo = CinemaRepository();
   late final _showtimeRepo = ShowtimeRepository();
   late final _movieRepo = MovieRepository();
+  bool _showAllAmenities = false;
 
   void _showSnack(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -88,7 +89,6 @@ class _CinemaDetailsScreenState extends State<CinemaDetailsScreen> {
                     const SizedBox(height: 8),
                     Text(snap.error.toString(), style: const TextStyle(color: Colors.white70), textAlign: TextAlign.center),
                     const SizedBox(height: 12),
-                    OutlinedButton(onPressed: () => Navigator.maybePop(context), child: const Text('Back')),
                   ],
                 ),
               ),
@@ -171,31 +171,56 @@ class _CinemaDetailsScreenState extends State<CinemaDetailsScreen> {
                   ),
 
                   const SizedBox(height: 18),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    child: const Text('Amenities', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: (cinema.amenities.isNotEmpty ? cinema.amenities : ['Accessible']).map((a) {
-                        final icon = a.toLowerCase().contains('imax')
-                            ? Icons.theaters
-                            : a.toLowerCase().contains('dolby')
-                                ? Icons.speaker
-                                : a.toLowerCase().contains('parking')
-                                    ? Icons.local_parking
-                                    : a.toLowerCase().contains('reclin')
-                                        ? Icons.chair
-                                        : a.toLowerCase().contains('access')
-                                            ? Icons.accessible
-                                            : Icons.movie;
-                        return SizedBox(width: 160, child: _amenityTile(icon, a));
-                      }).toList(),
-                    ),
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('Amenities', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: (cinema.amenities.isNotEmpty ? cinema.amenities : ['Accessible'])
+                              .take(_showAllAmenities ? cinema.amenities.length : 4)
+                              .map((a) {
+                                final icon = a.toLowerCase().contains('imax')
+                                    ? Icons.theaters
+                                    : a.toLowerCase().contains('dolby')
+                                        ? Icons.speaker
+                                        : a.toLowerCase().contains('parking')
+                                            ? Icons.local_parking
+                                            : a.toLowerCase().contains('reclin')
+                                                ? Icons.chair
+                                                : a.toLowerCase().contains('access')
+                                                    ? Icons.accessible
+                                                    : Icons.movie;
+                                return SizedBox(width: 160, child: _amenityTile(icon, a));
+                              }).toList(),
+                        ),
+                      ),
+                      if ((cinema.amenities.isNotEmpty ? cinema.amenities.length : 1) > 4) ...[
+                        const SizedBox(height: 6),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () => setState(() => _showAllAmenities = !_showAllAmenities),
+                              child: Text(
+                                _showAllAmenities ? 'See Less' : 'See More',
+                                style: const TextStyle(color: AppColors.dodgerBlue, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
 
                   const SizedBox(height: 24),
@@ -656,4 +681,5 @@ class _CinemaDetailsScreenState extends State<CinemaDetailsScreen> {
         ),
       ),
     );
-  }}
+  }
+}

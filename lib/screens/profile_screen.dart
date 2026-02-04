@@ -13,6 +13,7 @@ import 'profile_setup_screen.dart';
 import 'purchase_history_screen.dart';
 import 'help_support_screen.dart';
 import 'terms_of_service_screen.dart';
+import 'liked_movies_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -79,6 +80,14 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 24),
               _sectionTitle(context, localizations.preferences.toUpperCase()),
               _cardSurface(context, [
+                _rowItem(
+                  context,
+                  icon: Icons.favorite,
+                  label: '${(user?.fullName?.isNotEmpty == true ? user!.fullName : 'User')} Movies',
+                  trailing: Icon(Icons.chevron_right, color: _textSecondary(context)),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LikedMoviesScreen())),
+                ),
+                _divider(context),
                 _switchRow(
                   context,
                   icon: Icons.dark_mode,

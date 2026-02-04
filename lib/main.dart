@@ -31,6 +31,8 @@ import 'viewmodel/session/session_viewmodel.dart';
 import 'viewmodel/bookings/bookings_viewmodel.dart';
 import 'viewmodel/bookings/my_bookings_viewmodel.dart';
 import 'viewmodel/bookings/bookings_summary_viewmodel.dart';
+import 'viewmodel/favorites/favorite_movies_viewmodel.dart';
+import 'viewmodel/favorites/saved_movies_viewmodel.dart';
 
 void main() {
   final storage = LocalStorage();
@@ -72,6 +74,18 @@ void main() {
         ),
         ChangeNotifierProvider(
           create: (_) => MovieDetailViewModel(MovieRepository()),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => FavoriteMoviesViewModel(
+            storage: context.read<LocalStorage>(),
+            session: context.read<SessionViewModel>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SavedMoviesViewModel(
+            storage: context.read<LocalStorage>(),
+            session: context.read<SessionViewModel>(),
+          ),
         ),
       ],
       child: const MyApp(),

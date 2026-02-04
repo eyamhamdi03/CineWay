@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/movie.dart';
 import '../models/review.dart';
 import '../viewmodel/movie/movie_detail_viewmodel.dart';
+import '../viewmodel/favorites/favorite_movies_viewmodel.dart';
 
 class MovieDetailsScreen extends StatefulWidget {
   final int movieId;
@@ -19,11 +20,11 @@ class MovieDetailsScreen extends StatefulWidget {
 
 class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
   bool _expandSynopsis = false;
-  bool _isFavorite = false;
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<MovieDetailViewModel>();
+    final favorites = context.watch<FavoriteMoviesViewModel>();
 
     if (vm.currentMovieId != widget.movieId && !vm.isLoading) {
       Future.microtask(() => vm.loadMovieById(widget.movieId));
@@ -37,6 +38,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
     }
 
     final movie = vm.movie!;
+    final isFavorite = favorites.isFavorite(movie.id);
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -77,7 +79,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                     ),
                     // Back & Favorite buttons
                     Positioned(
-                      top: 16,
+                      top: MediaQuery.of(context).padding.top + 12,
                       left: 16,
                       right: 16,
                       child: Row(
@@ -97,8 +99,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              setState(() => _isFavorite = !_isFavorite);
-                              // TODO: Save to database
+                              favorites.toggleFavorite(movie.id);
                             },
                             child: Container(
                               padding: const EdgeInsets.all(8),
@@ -108,8 +109,8 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                                 border: Border.all(color: Colors.white.withOpacity(0.1)),
                               ),
                               child: Icon(
-                                _isFavorite ? Icons.favorite : Icons.favorite_border,
-                                color: _isFavorite ? Colors.red : Colors.white,
+                                isFavorite ? Icons.favorite : Icons.favorite_border,
+                                color: isFavorite ? Colors.red : Colors.white,
                                 size: 20,
                               ),
                             ),

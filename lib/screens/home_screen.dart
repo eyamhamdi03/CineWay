@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cineway/core/colors.dart';
 import 'details_screen.dart';
 import 'movies_screen.dart';
 import 'notifications_screen.dart';
@@ -6,6 +7,8 @@ import '../models/movie.dart';
 import '../repository/movie_repository.dart';
 import 'package:provider/provider.dart';
 import '../viewmodel/session/session_viewmodel.dart';
+import '../viewmodel/favorites/favorite_movies_viewmodel.dart';
+import '../viewmodel/favorites/saved_movies_viewmodel.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -83,6 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final favorites = context.watch<FavoriteMoviesViewModel>();
+    final saved = context.watch<SavedMoviesViewModel>();
     final session = context.watch<SessionViewModel>();
     final firstName = (session.user?.fullName?.trim().split(' ').first ?? 
                       session.user?.email?.split('@').first ?? 
@@ -490,7 +495,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                                           ),
                                                         ),
                                                       ),
-                                                      const Icon(Icons.bookmark_border, color: Color(0xFFB0B0B0), size: 22),
+                                                      GestureDetector(
+                                                        onTap: () => saved.toggleSaved(movie.id),
+                                                        child: Icon(
+                                                          saved.isSaved(movie.id) ? Icons.bookmark : Icons.bookmark_border,
+                                                          color: saved.isSaved(movie.id)
+                                                              ? AppColors.dodgerBlue
+                                                              : const Color(0xFFB0B0B0),
+                                                          size: 22,
+                                                        ),
+                                                      ),
                                                     ],
                                                   ),
                                                   const SizedBox(height: 8),

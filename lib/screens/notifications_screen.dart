@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/colors.dart';
 import '../models/notification.dart';
+import '../viewmodel/session/session_viewmodel.dart';
+import '../viewmodel/notifications_viewmodel.dart';
+import '../services/notification_permission_service.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -10,106 +14,29 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  late List<AppNotification> _notifications;
-  late List<AppNotification> _todayNotifications;
-  late List<AppNotification> _earlierNotifications;
+  late NotificationsViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
+    _viewModel = NotificationsViewModel();
     _loadNotifications();
+    _requestNotificationPermission();
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    final isGranted = await NotificationPermissionService.requestNotificationPermission();
+    if (!isGranted && mounted) {
+      // Permission was denied
+      await NotificationPermissionService.requestNotificationPermissionWithDialog(context);
+    }
   }
 
   void _loadNotifications() {
-    _notifications = [
-      AppNotification(
-        id: '1',
-        title: 'Booking Successful!',
-        message: 'Your ticket for Galaxy Runners is ready. Enjoy your movie!',
-        type: 'booking',
-        isRead: false,
-        timestamp: DateTime.now(),
-        movieOrCinemaName: 'Galaxy Runners',
-        icon: 'confirmation_number',
-      ),
-      AppNotification(
-        id: '2',
-        title: 'Rate your experience',
-        message: 'How was Final Stand? Share your thoughts with the community.',
-        type: 'rating',
-        isRead: false,
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-        movieOrCinemaName: 'Final Stand',
-        icon: 'star',
-      ),
-      AppNotification(
-        id: '3',
-        title: 'New Movie Release',
-        message: 'The trailer for Cosmic Journey is now available to watch.',
-        type: 'movie_release',
-        isRead: true,
-        timestamp: DateTime.now().subtract(const Duration(days: 1)),
-        movieOrCinemaName: 'Cosmic Journey',
-        icon: 'notifications',
-      ),
-      AppNotification(
-        id: '4',
-        title: 'Weekend Promo!',
-        message: 'Get 20% off on snacks with your next booking using code CINE20.',
-        type: 'promo',
-        isRead: true,
-        timestamp: DateTime(2023, 10, 12),
-        icon: 'celebration',
-      ),
-      AppNotification(
-        id: '5',
-        title: 'Payment Receipt',
-        message: 'Your payment of \$24.00 was successful for Order #CW-8821.',
-        type: 'payment',
-        isRead: true,
-        timestamp: DateTime(2023, 10, 11),
-        icon: 'receipt_long',
-      ),
-    ];
-
-    _categorizeNotifications();
-  }
-
-  void _categorizeNotifications() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    _todayNotifications = _notifications
-        .where((n) {
-          final nDate = DateTime(n.timestamp.year, n.timestamp.month, n.timestamp.day);
-          return nDate == today;
-        })
-        .toList();
-
-    _earlierNotifications = _notifications
-        .where((n) {
-          final nDate = DateTime(n.timestamp.year, n.timestamp.month, n.timestamp.day);
-          return nDate != today;
-        })
-        .toList();
-  }
-
-  void _markAllAsRead() {
-    setState(() {
-      for (var notification in _notifications) {
-        notification = AppNotification(
-          id: notification.id,
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-          isRead: true,
-          timestamp: notification.timestamp,
-          movieOrCinemaName: notification.movieOrCinemaName,
-          icon: notification.icon,
-        );
-      }
-      _categorizeNotifications();
-    });
+    final session = context.read<SessionViewModel>();
+    if (session.accessToken != null && session.accessToken!.isNotEmpty) {
+      _viewModel.loadNotifications(session.accessToken!);
+    }
   }
 
   String _getTimeString(DateTime timestamp) {
@@ -118,7 +45,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final nDate = DateTime(timestamp.year, timestamp.month, timestamp.day);
 
     if (nDate == today) {
-      return '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')} AM';
+      return '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
     } else if (nDate == today.subtract(const Duration(days: 1))) {
       return 'Yesterday';
     } else {
@@ -158,99 +85,282 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Row(
+        child: ChangeNotifierProvider<NotificationsViewModel>(
+          create: (_) => _viewModel,
+          child: Consumer<NotificationsViewModel>(
+            builder: (context, viewModel, _) {
+              return Column(
                 children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Text(
+                            'Notifications',
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                        ),
+                        PopupMenuButton<String>(
+                          color: const Color(0xFF1E1E1E),
+                          onSelected: (String choice) async {
+                            if (choice == 'permissions') {
+                              final isGranted = await NotificationPermissionService.requestNotificationPermission();
+                              if (!isGranted && mounted) {
+                                await NotificationPermissionService.requestNotificationPermissionWithDialog(context);
+                              }
+                            } else if (choice == 'clear') {
+                              final session = context.read<SessionViewModel>();
+                              if (session.accessToken != null) {
+                                await viewModel.clearAll(session.accessToken!);
+                              }
+                            }
+                          },
+                          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                            const PopupMenuItem<String>(
+                              value: 'permissions',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.notifications_active, color: Colors.white, size: 18),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'Enable Notifications',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (viewModel.notifications.isNotEmpty)
+                              const PopupMenuDivider(),
+                            if (viewModel.notifications.isNotEmpty)
+                              const PopupMenuItem<String>(
+                                value: 'clear',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.delete_sweep, color: Colors.red, size: 18),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'Clear All',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Text(
-                      'Notifications',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _markAllAsRead,
-                    child: const Text(
-                      'Mark all as read',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.dodgerBlue,
-                      ),
-                    ),
+
+                  // Notifications List
+                  Expanded(
+                    child: viewModel.isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        : viewModel.error != null
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.error_outline, color: Colors.red, size: 48),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Error: ${viewModel.error}',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(color: Colors.white70),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    ElevatedButton(
+                                      onPressed: _loadNotifications,
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : viewModel.notifications.isEmpty
+                                ? Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.notifications_none, color: Colors.white30, size: 64),
+                                        const SizedBox(height: 16),
+                                        const Text(
+                                          'No notifications',
+                                          style: TextStyle(color: Colors.white70, fontSize: 16),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        const Text(
+                                          'Enable notifications to stay updated',
+                                          style: TextStyle(color: Colors.white54, fontSize: 12),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        ElevatedButton.icon(
+                                          onPressed: () async {
+                                            final isGranted = await NotificationPermissionService.requestNotificationPermission();
+                                            if (!isGranted && mounted) {
+                                              await NotificationPermissionService.requestNotificationPermissionWithDialog(context);
+                                            } else if (isGranted && mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('Notifications enabled!')),
+                                              );
+                                            }
+                                          },
+                                          icon: const Icon(Icons.notifications_active),
+                                          label: const Text('Enable Notifications'),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : ListView(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    children: [
+                                      // Notification Status Card
+                                      Container(
+                                        margin: const EdgeInsets.only(bottom: 16),
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.dodgerBlue.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: AppColors.dodgerBlue.withOpacity(0.3),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.check_circle,
+                                              color: AppColors.dodgerBlue,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  const Text(
+                                                    'Notification History',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 13,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    '${viewModel.notifications.length} notifications • ${viewModel.notifications.where((n) => !n.isRead).length} unread',
+                                                    style: TextStyle(
+                                                      color: Colors.white.withOpacity(0.6),
+                                                      fontSize: 11,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // TODAY Section
+                                      if (viewModel.todayNotifications.isNotEmpty) ...[
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 4, bottom: 12, top: 8),
+                                          child: Text(
+                                            'TODAY',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white.withOpacity(0.5),
+                                              letterSpacing: 1.2,
+                                            ),
+                                          ),
+                                        ),
+                                        ...viewModel.todayNotifications
+                                            .map((notification) => _buildNotificationCard(context, notification, viewModel))
+                                            .toList(),
+                                        const SizedBox(height: 24),
+                                      ],
+
+                                      // EARLIER Section
+                                      if (viewModel.earlierNotifications.isNotEmpty) ...[
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 4, bottom: 12),
+                                          child: Text(
+                                            'EARLIER',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white.withOpacity(0.5),
+                                              letterSpacing: 1.2,
+                                            ),
+                                          ),
+                                        ),
+                                        ...viewModel.earlierNotifications
+                                            .map((notification) => _buildNotificationCard(context, notification, viewModel))
+                                            .toList(),
+                                      ],
+                                    ],
+                                  ),
                   ),
                 ],
-              ),
-            ),
-
-            // Notifications List
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                children: [
-                  // TODAY Section
-                  if (_todayNotifications.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4, bottom: 12, top: 8),
-                      child: Text(
-                        'TODAY',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white.withOpacity(0.5),
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-                    ..._todayNotifications.map((notification) => _buildNotificationCard(notification)).toList(),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // EARLIER Section
-                  if (_earlierNotifications.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4, bottom: 12),
-                      child: Text(
-                        'EARLIER',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white.withOpacity(0.5),
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-                    ..._earlierNotifications.map((notification) => _buildNotificationCard(notification)).toList(),
-                  ],
-                ],
-              ),
-            ),
-          ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildNotificationCard(AppNotification notification) {
+  Widget _buildNotificationCard(BuildContext context, AppNotification notification, NotificationsViewModel viewModel) {
     return GestureDetector(
-      onTap: () {
-        // TODO: Handle notification tap
+      onLongPress: () {
+        showModalBottomSheet(
+          context: context,
+          builder: (context) => Container(
+            color: const Color(0xFF1E1E1E),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.check, color: Colors.white),
+                  title: const Text('Mark as read', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    final session = context.read<SessionViewModel>();
+                    if (session.accessToken != null) {
+                      viewModel.markAsRead(session.accessToken!, notification.id);
+                    }
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Colors.red),
+                  title: const Text('Delete', style: TextStyle(color: Colors.red)),
+                  onTap: () {
+                    final session = context.read<SessionViewModel>();
+                    if (session.accessToken != null) {
+                      viewModel.deleteNotification(session.accessToken!, notification.id);
+                    }
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
